@@ -1,0 +1,2735 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>はなまき子育てマップ（試作版）</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1: #fcfcfb;
+    --surface-2: #ffffff;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #7a7972;
+    --border: #e3e2dd;
+    --series-hs: #1baf7a;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    color: var(--text-primary);
+    background: var(--surface-1);
+  }
+  #app { display: flex; flex-direction: column; height: 100%; }
+
+  header {
+    padding: 14px 18px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  header h1 { font-size: 16px; margin: 0; font-weight: 700; }
+  header .badge {
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: #f0efec;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px 10px;
+  }
+  header .note { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+
+  #main { flex: 1; display: flex; min-height: 0; }
+
+  #sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    background: var(--surface-2);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 14px;
+  }
+
+  .legend-group {
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .legend-group-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+  }
+  .legend-group-header:hover { background: #f5f4f1; }
+  .legend-group-header:focus-visible { box-shadow: 0 0 0 2px var(--border) inset; }
+
+  .legend-group-title {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-primary);
+    flex: 1;
+  }
+  .legend-group-count { font-size: 12px; color: var(--text-muted); }
+  .legend-group-chevron {
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted);
+    transition: transform 0.15s;
+  }
+  .legend-group.expanded .legend-group-chevron { transform: rotate(90deg); }
+
+  .legend-group-rows {
+    display: none;
+    padding: 2px 0 6px;
+  }
+  .legend-group.expanded .legend-group-rows { display: block; }
+
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 6px 7px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+  }
+  .legend-row:hover { background: #f5f4f1; }
+  .legend-row:focus-visible { box-shadow: 0 0 0 2px var(--border) inset; }
+
+  .legend-dot {
+    --dot-color: #999;
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1.5px solid var(--dot-color);
+    background: var(--dot-color);
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .legend-row[aria-checked="false"] .legend-dot { background: transparent; }
+  .legend-row[aria-checked="false"] .legend-label,
+  .legend-row[aria-checked="false"] .legend-count { opacity: 0.4; }
+
+  .legend-label { font-size: 14px; flex: 1; }
+  .legend-count { font-size: 12px; color: var(--text-muted); }
+
+  .fac-group-title {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 14px 0 4px;
+    padding: 0 6px;
+  }
+  .fac-list { margin-top: 16px; }
+  .fac-item { padding: 8px 6px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 13px; }
+  .fac-item:hover { background: #f5f4f1; }
+  .fac-item .name { font-weight: 400; }
+  .fac-item .addr { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+
+  #map { flex: 1; }
+
+  .popup-title { font-weight: 500; font-size: 14px; margin-bottom: 4px; }
+  .popup-cat {
+    display: inline-block;
+    font-size: 11px;
+    color: #fff;
+    background: var(--series-hs);
+    border-radius: 4px;
+    padding: 1px 7px;
+    margin-bottom: 6px;
+  }
+  .popup-row { font-size: 12.5px; color: var(--text-secondary); margin: 2px 0; }
+  .popup-row a { color: #2a78d6; }
+  .popup-note { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; border-top: 1px dashed var(--border); padding-top: 6px; }
+
+  @media (max-width: 720px) {
+    #sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>はなまき子育てマップ</h1>
+    <span class="badge">試作版（189件）</span>
+    <span class="note">動作確認用プロトタイプ</span>
+  </header>
+  <div id="main">
+    <div id="sidebar">
+      <div id="legend"></div>
+      <div class="fac-list" id="fac-list"></div>
+    </div>
+    <div id="map"></div>
+  </div>
+</div>
+
+<script>
+const DATA = [
+  {
+    "category": "小学校",
+    "name": "花巻小学校",
+    "address": "〒025-0075 岩手県花巻市花城町5番13号",
+    "phone": "0198-23-2376",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001491/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.391178,
+    "lon": 141.118774,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "若葉小学校",
+    "address": "〒025-0097 岩手県花巻市若葉町二丁目17番30号",
+    "phone": "0198-23-3305",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001510/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.386909,
+    "lon": 141.102219,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "桜台小学校",
+    "address": "〒025-0068 岩手県花巻市下幅292番地",
+    "phone": "0198-24-6066",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1007125/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.400326,
+    "lon": 141.111969,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "南城小学校",
+    "address": "〒025-0021 岩手県花巻市南城110番地1",
+    "phone": "0198-23-2144",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001662/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.371155,
+    "lon": 141.119873,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "湯口小学校",
+    "address": "〒025-0042 岩手県花巻市円万寺字法船96番地6",
+    "phone": "0198-28-2220",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001630/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.390095,
+    "lon": 141.056396,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "湯本小学校",
+    "address": "〒025-0303 岩手県花巻市大畑第3地割331番地1",
+    "phone": "0198-27-2525",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001641/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.446262,
+    "lon": 141.082565,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "矢沢小学校",
+    "address": "〒025-0016 岩手県花巻市高木第20地割81番地1",
+    "phone": "0198-23-2179",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001721/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.38493,
+    "lon": 141.149002,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "宮野目小学校",
+    "address": "〒025-0002 岩手県花巻市西宮野目第6地割353番地1",
+    "phone": "0198-26-3119",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1007126/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.424187,
+    "lon": 141.128342,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "太田小学校",
+    "address": "〒025-0037 岩手県花巻市太田第32地割61番地",
+    "phone": "0198-28-2212",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1007127/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.373749,
+    "lon": 141.051605,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "笹間第一小学校",
+    "address": "〒025-0133 岩手県花巻市中笹間15地割1番地",
+    "phone": "0198-29-2320",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001503/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.346493,
+    "lon": 141.047821,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "大迫小学校",
+    "address": "〒028-3203 岩手県花巻市大迫町大迫第18地割3番地",
+    "phone": "0198-48-2226",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001550/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.462654,
+    "lon": 141.28447,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "石鳥谷小学校",
+    "address": "〒028-3101 岩手県花巻市石鳥谷町好地第7地割34番地1",
+    "phone": "0198-45-2012",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001533/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.500217,
+    "lon": 141.149384,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "新堀小学校",
+    "address": "〒028-3111 岩手県花巻市石鳥谷町新堀第46地割2番地1",
+    "phone": "0198-45-3021",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001519/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.486206,
+    "lon": 141.17778,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "八幡小学校",
+    "address": "〒028-3163 岩手県花巻市石鳥谷町八幡第1地割125番地1",
+    "phone": "0198-45-3309",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1007130/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.472279,
+    "lon": 141.150543,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "八重畑小学校",
+    "address": "〒028-3131 岩手県花巻市石鳥谷町猪鼻第7地割38番地1",
+    "phone": "0198-47-2114",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001669/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.446381,
+    "lon": 141.185669,
+    "note": ""
+  },
+  {
+    "category": "小学校",
+    "name": "東和小学校",
+    "address": "〒028-0115 岩手県花巻市東和町安俵11区12番地1",
+    "phone": "0198-29-4334",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001611/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.382664,
+    "lon": 141.225159,
+    "note": ""
+  },
+  {
+    "category": "中学校",
+    "name": "花巻中学校",
+    "address": "〒025-0097 岩手県花巻市若葉町二丁目16番22号",
+    "phone": "0198-23-2151",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001499/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.388824,
+    "lon": 141.102356,
+    "note": ""
+  },
+  {
+    "category": "中学校",
+    "name": "花巻北中学校",
+    "address": "〒025-0001 岩手県花巻市天下田182番地",
+    "phone": "0198-24-8766",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1007131/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.410809,
+    "lon": 141.110901,
+    "note": ""
+  },
+  {
+    "category": "中学校",
+    "name": "南城中学校",
+    "address": "〒025-0021 岩手県花巻市南城251番地",
+    "phone": "0198-23-4146",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1007132/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.366241,
+    "lon": 141.119217,
+    "note": ""
+  },
+  {
+    "category": "中学校",
+    "name": "湯口中学校",
+    "address": "〒025-0042 岩手県花巻市円万寺字法船23番地",
+    "phone": "0198-28-2233",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001635/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.391376,
+    "lon": 141.054016,
+    "note": ""
+  },
+  {
+    "category": "中学校",
+    "name": "湯本中学校",
+    "address": "〒025-0304 岩手県花巻市湯本第4番地1",
+    "phone": "0198-27-2719",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001647/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.444786,
+    "lon": 141.086258,
+    "note": ""
+  },
+  {
+    "category": "中学校",
+    "name": "矢沢中学校",
+    "address": "〒025-0014 岩手県花巻市高松第5地割42番地",
+    "phone": "0198-31-2022",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1007133/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.389126,
+    "lon": 141.155838,
+    "note": ""
+  },
+  {
+    "category": "中学校",
+    "name": "宮野目中学校",
+    "address": "〒025-0002 岩手県花巻市西宮野目第6地割156番地2",
+    "phone": "0198-26-2117",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1007134/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.425613,
+    "lon": 141.124893,
+    "note": ""
+  },
+  {
+    "category": "中学校",
+    "name": "西南中学校",
+    "address": "〒025-0131 岩手県花巻市轟木第7地割12番地",
+    "phone": "0198-29-2321",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001530/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.360508,
+    "lon": 141.038818,
+    "note": "座標はGSI簡略化住所（大字レベル）による近似値"
+  },
+  {
+    "category": "中学校",
+    "name": "大迫中学校",
+    "address": "〒028-3202 岩手県花巻市大迫町外川目第27地割22番地1",
+    "phone": "0198-48-2221",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001592/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.461723,
+    "lon": 141.294098,
+    "note": ""
+  },
+  {
+    "category": "中学校",
+    "name": "石鳥谷中学校",
+    "address": "〒028-3163 岩手県花巻市石鳥谷町八幡第6地割37番地1",
+    "phone": "0198-45-3117",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1001547/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.465599,
+    "lon": 141.145035,
+    "note": "座標はGSI簡略化住所（大字レベル）による近似値"
+  },
+  {
+    "category": "中学校",
+    "name": "東和中学校",
+    "address": "〒028-0114 岩手県花巻市東和町土沢第5区20番地",
+    "phone": "0198-42-4221",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sho_chugakko/website/1007135/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.384293,
+    "lon": 141.239502,
+    "note": ""
+  },
+  {
+    "category": "高等学校",
+    "name": "花巻北高等学校",
+    "address": "〒025-0061 岩手県花巻市本舘54番地",
+    "phone": "",
+    "url": "https://www2.iwate-ed.jp/hkn-h/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.411385,
+    "lon": 141.116028,
+    "note": "県立／電話番号は要確認"
+  },
+  {
+    "category": "高等学校",
+    "name": "花巻南高等学校",
+    "address": "〒025-0053 岩手県花巻市中北万丁目288番1",
+    "phone": "",
+    "url": "https://www2.iwate-ed.jp/hks-h/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.392761,
+    "lon": 141.087112,
+    "note": "県立／電話番号は要確認"
+  },
+  {
+    "category": "高等学校",
+    "name": "花巻農業高等学校",
+    "address": "〒025-0004 岩手県花巻市葛第1地割68番地",
+    "phone": "",
+    "url": "https://hka-hs.note.jp/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.440117,
+    "lon": 141.141296,
+    "note": "県立／電話番号は要確認"
+  },
+  {
+    "category": "高等学校",
+    "name": "花北青雲高等学校",
+    "address": "〒028-3172 岩手県花巻市石鳥谷町北寺林第11地割1825-1",
+    "phone": "",
+    "url": "https://www2.iwate-ed.jp/hkb-h/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.489197,
+    "lon": 141.131302,
+    "note": "県立／電話番号は要確認"
+  },
+  {
+    "category": "高等学校",
+    "name": "大迫高等学校",
+    "address": "〒028-3203 岩手県花巻市大迫町大迫第9地割19-1",
+    "phone": "",
+    "url": "https://www2.iwate-ed.jp/ooh-h/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.47216,
+    "lon": 141.28746,
+    "note": "県立／電話番号は要確認"
+  },
+  {
+    "category": "高等学校",
+    "name": "花巻東高等学校",
+    "address": "〒025-0066 岩手県花巻市松園町55番地1",
+    "phone": "",
+    "url": "https://www.hanamakihigashi-h.jp/",
+    "instagram": "https://www.instagram.com/hanamakihigashi_h/",
+    "facebook": "https://www.facebook.com/hanamakihigashi/",
+    "lat": 39.405113,
+    "lon": 141.098709,
+    "note": "私立／電話番号は要確認"
+  },
+  {
+    "category": "図書館",
+    "name": "花巻図書館",
+    "address": "〒025-0097 岩手県花巻市若葉町三丁目16番24号",
+    "phone": "0198-23-5334",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/bunka/1004141/1004142.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.384506,
+    "lon": 141.101456,
+    "note": "開館9:00-18:00"
+  },
+  {
+    "category": "図書館",
+    "name": "東和図書館",
+    "address": "〒028-0115 岩手県花巻市東和町安俵6区90番地",
+    "phone": "0198-42-3202",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/bunka/1004141/1004145.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.384319,
+    "lon": 141.224472,
+    "note": "開館9:00-18:00／月曜休"
+  },
+  {
+    "category": "図書館",
+    "name": "大迫図書館",
+    "address": "〒028-3203 岩手県花巻市大迫町大迫第2地割51番地4（大迫総合支所内）",
+    "phone": "0198-48-2244",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/bunka/1004141/1004143.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.468525,
+    "lon": 141.288605,
+    "note": "開館9:00-18:00"
+  },
+  {
+    "category": "図書館",
+    "name": "石鳥谷図書館",
+    "address": "〒028-3171 岩手県花巻市石鳥谷町中寺林第7地割5番地1",
+    "phone": "0198-45-6882",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/bunka/1004141/1004144.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.473698,
+    "lon": 141.136871,
+    "note": "開館9:00-18:00／月曜休"
+  },
+  {
+    "category": "振興センター",
+    "name": "松園振興センター",
+    "address": "〒025-0066 花巻市松園町4番地3（花巻市技術振興会館内）",
+    "phone": "0198-23-4545",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004148.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.409988,
+    "lon": 141.095169,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "花北振興センター",
+    "address": "〒025-0072 花巻市四日町一丁目1番地27",
+    "phone": "0198-24-9081",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004149.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.396515,
+    "lon": 141.113205,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "花巻中央振興センター",
+    "address": "〒025-0075 花巻市花城町1番30号",
+    "phone": "0198-23-5290",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004150.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.390453,
+    "lon": 141.116241,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "花西振興センター",
+    "address": "〒025-0095 花巻市石神町364番地（花巻市総合福祉センター内）",
+    "phone": "0198-22-6541",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004151.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.381271,
+    "lon": 141.103058,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "花南振興センター",
+    "address": "〒025-0021 花巻市南城57番地",
+    "phone": "0198-24-9547",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004152.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.370171,
+    "lon": 141.118744,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "湯口振興センター",
+    "address": "〒025-0042 花巻市円万寺字堰田53番地1",
+    "phone": "0198-28-2111",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004153.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.393803,
+    "lon": 141.047668,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "湯本振興センター",
+    "address": "〒025-0304 花巻市湯本第4地割31番地8",
+    "phone": "0198-27-2053",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004154.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.444786,
+    "lon": 141.086258,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "矢沢振興センター",
+    "address": "〒025-0016 花巻市高木第19地割24番地14",
+    "phone": "0198-23-2171",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004155.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.385807,
+    "lon": 141.140717,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "宮野目振興センター",
+    "address": "〒025-0002 花巻市西宮野目第6地割172番地",
+    "phone": "0198-26-2111",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004156.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.426224,
+    "lon": 141.128265,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "太田振興センター",
+    "address": "〒025-0037 花巻市太田第32地割163番地3",
+    "phone": "0198-28-2134",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004157.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.373749,
+    "lon": 141.051605,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "笹間振興センター",
+    "address": "〒025-0132 花巻市北笹間13地割74番地1",
+    "phone": "0198-29-2111",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004158.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.358269,
+    "lon": 141.051727,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "大迫振興センター",
+    "address": "〒028-3203 花巻市大迫町大迫第3地割161番地",
+    "phone": "0198-48-3231",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004159.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.466721,
+    "lon": 141.285263,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "内川目振興センター",
+    "address": "〒028-3201 花巻市大迫町内川目第36地割85番地",
+    "phone": "0198-48-5301",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004160.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.466557,
+    "lon": 141.305374,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "外川目振興センター",
+    "address": "〒028-3202 花巻市大迫町外川目第27地割107番地5",
+    "phone": "0198-29-4112",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004161.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.461388,
+    "lon": 141.291901,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "亀ケ森振興センター",
+    "address": "〒028-3204 花巻市大迫町亀ケ森第7地割12番地1",
+    "phone": "0198-48-2668",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1021854.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.478146,
+    "lon": 141.243256,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "好地振興センター",
+    "address": "〒028-3101 花巻市石鳥谷町好地第8地割78番地3（石鳥谷国際交流センター内）",
+    "phone": "0198-45-6639",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004163.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.500217,
+    "lon": 141.149384,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "大瀬川振興センター",
+    "address": "〒028-3185 花巻市石鳥谷町大瀬川第10地割45番地2",
+    "phone": "0198-45-6472",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004164.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.511372,
+    "lon": 141.065811,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "八日市振興センター",
+    "address": "〒028-3181 花巻市石鳥谷町大興寺第8地割157番地4（八日市いきいき交流館内）",
+    "phone": "0198-45-4840",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004165.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.4706,
+    "lon": 141.107742,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "八幡振興センター",
+    "address": "〒028-3163 花巻市石鳥谷町八幡第23地割147番地",
+    "phone": "0198-45-3535",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004166.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.467628,
+    "lon": 141.144211,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "八重畑振興センター",
+    "address": "〒028-3131 花巻市石鳥谷町猪鼻第7地割30番地1（八重畑定住促進センター内）",
+    "phone": "0198-47-2113",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004167.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.442791,
+    "lon": 141.202011,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "新堀振興センター",
+    "address": "〒028-3111 花巻市石鳥谷町新堀第40地割27番地2",
+    "phone": "0198-45-3730",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004168.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.475319,
+    "lon": 141.198257,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "小山田振興センター",
+    "address": "〒028-0102 花巻市東和町北川目2区289番地（東和高齢者コミュニティセンター内）",
+    "phone": "0198-42-2941",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004169.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.416943,
+    "lon": 141.230118,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "土沢振興センター",
+    "address": "〒028-0115 花巻市東和町安俵6区53番地",
+    "phone": "0198-42-3255",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1013196.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.385551,
+    "lon": 141.225723,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "成島振興センター",
+    "address": "〒028-0116 花巻市東和町北成島5区78番地1",
+    "phone": "0198-42-3929",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004171.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.365944,
+    "lon": 141.211212,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "浮田振興センター",
+    "address": "〒028-0143 花巻市東和町上浮田2区140番地（浮田集会所内）",
+    "phone": "0198-42-1681",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004172.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.320518,
+    "lon": 141.211304,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "谷内振興センター",
+    "address": "〒028-0132 花巻市東和町舘迫5区22番地",
+    "phone": "0198-44-3281",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004173.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.360634,
+    "lon": 141.257721,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "振興センター",
+    "name": "田瀬振興センター",
+    "address": "〒028-0123 花巻市東和町田瀬14区137番地",
+    "phone": "0198-44-5281",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/chiiki/1004147/1004174.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.315605,
+    "lon": 141.313034,
+    "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
+  },
+  {
+    "category": "支援センター",
+    "name": "こどもセンター",
+    "address": "〒025-0075 花巻市花城町1番47号（生涯学園都市会館内）",
+    "phone": "0198-21-4388",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kosodate/odekake/kosodateshien_center/1023263/index.html",
+    "instagram": "https://www.instagram.com/hanamaki_kodomo_c/",
+    "facebook": "https://www.facebook.com/pages/花巻市役所 こどもセンター/1929933063955594/",
+    "lat": 39.390011,
+    "lon": 141.115479,
+    "note": "対象：生後1か月〜就学前／9:00-16:00・祝日休"
+  },
+  {
+    "category": "支援センター",
+    "name": "宮野目保育園地域子育て支援センター",
+    "address": "〒025-0002 花巻市西宮野目6-100",
+    "phone": "0198-26-5655",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kosodate/odekake/kosodateshien_center/1001460.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.423512,
+    "lon": 141.11644,
+    "note": "対象年齢：未就学児と推定（要確認）"
+  },
+  {
+    "category": "支援センター",
+    "name": "大迫保育園地域子育て支援センター",
+    "address": "〒028-3203 花巻市大迫町大迫4-22-1",
+    "phone": "0198-48-3292",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kosodate/odekake/kosodateshien_center/1001460.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.472183,
+    "lon": 141.285965,
+    "note": "対象年齢：未就学児と推定（要確認）"
+  },
+  {
+    "category": "支援センター",
+    "name": "若葉保育園地域子育て支援センター",
+    "address": "〒025-0097 花巻市若葉町2-1-22",
+    "phone": "0198-23-6400",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kosodate/odekake/kosodateshien_center/1001460.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.389584,
+    "lon": 141.106567,
+    "note": "対象年齢：未就学児と推定（要確認）"
+  },
+  {
+    "category": "支援センター",
+    "name": "石鳥谷町地域子育て支援センター",
+    "address": "〒028-3101 花巻市石鳥谷町好地第6地割30-6",
+    "phone": "0198-45-1004",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kosodate/odekake/kosodateshien_center/1001460.html",
+    "instagram": "",
+    "facebook": "https://www.facebook.com/pages/石鳥谷町地域子育て支援センター/1896560177293266/",
+    "lat": 39.500217,
+    "lon": 141.149384,
+    "note": "対象年齢：未就学児と推定（要確認）"
+  },
+  {
+    "category": "支援センター",
+    "name": "つちざわこども園地域子育て支援センター",
+    "address": "〒028-0114 花巻市東和町土沢2区315",
+    "phone": "080-2835-5193",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kosodate/odekake/kosodateshien_center/1001460.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.388664,
+    "lon": 141.225204,
+    "note": "対象年齢：未就学児と推定（要確認）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "銀河学童クラブ",
+    "address": "〒025-0075 花巻市花城町5-13",
+    "phone": "0198-23-0852",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019252.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.391178,
+    "lon": 141.118774,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "わかば学童クラブ",
+    "address": "〒025-0097 花巻市若葉町2丁目17-40",
+    "phone": "0198-24-2070",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019254.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.386929,
+    "lon": 141.10112,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "桜台学童クラブ",
+    "address": "〒025-0072 花巻市四日町1丁目1番3号",
+    "phone": "0198-24-7042",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019255.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.396484,
+    "lon": 141.112579,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "南城学童クラブ",
+    "address": "〒025-0084 花巻市桜町4丁目230",
+    "phone": "0198-22-4478",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019256.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.375381,
+    "lon": 141.119293,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "湯口学童クラブ",
+    "address": "〒025-0042 花巻市円万寺法船50-1",
+    "phone": "0198-28-4055",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019257.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.391376,
+    "lon": 141.054016,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "湯本学童クラブ",
+    "address": "〒025-0303 花巻市大畑第3地割331-1",
+    "phone": "0198-27-4507",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019258.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.446049,
+    "lon": 141.085281,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "矢沢学童クラブ",
+    "address": "〒025-0016 花巻市高木第20地割81-1",
+    "phone": "0198-24-8080",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019259.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.38493,
+    "lon": 141.149002,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "宮野目学童クラブ",
+    "address": "〒025-0002 花巻市西宮野目第6地割353-11",
+    "phone": "0198-26-3090",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019260.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.424187,
+    "lon": 141.128342,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "太田学童クラブ",
+    "address": "〒025-0037 花巻市太田第32地割490",
+    "phone": "0198-28-4755",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019261.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.372738,
+    "lon": 141.04454,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "笹間学童クラブ",
+    "address": "〒025-0133 花巻市中笹間第15地割1",
+    "phone": "0198-29-2999",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019263.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.346661,
+    "lon": 141.048645,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "早池峰学童クラブ",
+    "address": "〒028-3203 花巻市大迫町大迫第18地割3",
+    "phone": "0198-41-8277",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019264.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.462654,
+    "lon": 141.28447,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "石鳥谷学童クラブ",
+    "address": "〒028-3101 花巻市石鳥谷町好地第7地割34-12",
+    "phone": "0198-45-1178",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019265.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.500217,
+    "lon": 141.149384,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "新堀学童クラブ",
+    "address": "〒028-3111 花巻市石鳥谷町新堀第46地割2-1",
+    "phone": "0198-45-1689",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019266.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.486206,
+    "lon": 141.17778,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "八幡学童クラブ",
+    "address": "〒028-3163 花巻市石鳥谷町八幡第1地割125-1",
+    "phone": "0198-45-4593",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019268.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.472279,
+    "lon": 141.150543,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "八重畑学童クラブ",
+    "address": "〒028-3131 花巻市石鳥谷町猪鼻第7地割38-1",
+    "phone": "0198-29-6556",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019269.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.442791,
+    "lon": 141.202011,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "東和学童クラブ",
+    "address": "〒028-0114 花巻市東和町安俵11区12番地1",
+    "phone": "0198-42-4001",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019270.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.382664,
+    "lon": 141.225159,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "わこの家学童クラブ",
+    "address": "〒025-0075 花巻市花城町8-17",
+    "phone": "0198-41-3016",
+    "url": "https://www.wakonoie-npo.jp/blank",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.389175,
+    "lon": 141.118607,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "花南わんぱく学童クラブ",
+    "address": "〒025-0039 花巻市諏訪町二丁目4番地7",
+    "phone": "0198-29-5735",
+    "url": "http://www.j-chihirokai.or.jp/publics/index/46/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.374908,
+    "lon": 141.110519,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "放課後児童クラブCOCO.R SAKURADAI",
+    "address": "〒025-0064 花巻市桜台二丁目15番地2",
+    "phone": "0198-41-9903",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1019274.html",
+    "instagram": "https://www.instagram.com/coco.rsakuradai/",
+    "facebook": "",
+    "lat": 39.397747,
+    "lon": 141.103333,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "ニチイキッズ銀河わかば学童クラブ",
+    "address": "〒025-0055 花巻市南万丁目1175-2",
+    "phone": "0198-41-4881",
+    "url": "https://www.nichiikids.net/nursery/gingawakaba/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.388393,
+    "lon": 141.100296,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "ほめのば学童クラブ",
+    "address": "〒025-0063 花巻市下小舟渡92-1",
+    "phone": "0198-41-6212",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1023364.html",
+    "instagram": "https://www.instagram.com/homenobagakudou/",
+    "facebook": "",
+    "lat": 39.393639,
+    "lon": 141.119476,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "学童クラブ",
+    "name": "花巻太陽の子学童クラブ",
+    "address": "〒025-0065 花巻市星が丘1丁目9-2",
+    "phone": "0198-22-4445",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019250/1023365.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.402035,
+    "lon": 141.10141,
+    "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
+  },
+  {
+    "category": "フリースクール",
+    "name": "花巻市教育支援センター「風の子ひろば」（花巻市教育相談室）",
+    "address": "〒025-0075 岩手県花巻市花城町1番47号（生涯学園都市会館「まなび学園」3階）",
+    "phone": "0198-23-0260",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kyoiku/sodan/1001383.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.390011,
+    "lon": 141.115479,
+    "note": "公的（花巻市教育委員会）／不登校児童生徒向け。相談受付：火〜金9:00-16:00"
+  },
+  {
+    "category": "フリースクール",
+    "name": "いわて南ユースセンター キャリノバ（NPO法人はなのば運営）",
+    "address": "〒025-0064 岩手県花巻市桜台2丁目27-14（ほめのば学習塾内）",
+    "phone": "080-5866-2389",
+    "url": "https://hananoba.com/free-school/",
+    "instagram": "https://www.instagram.com/career_noba/",
+    "facebook": "",
+    "lat": 39.399956,
+    "lon": 141.104858,
+    "note": "民間（NPO法人）／はなまきこどもネットワーク会員名簿：担当 田代真由子"
+  },
+  {
+    "category": "フリースクール",
+    "name": "NPO法人わらすば／もっともっと楽しい学校",
+    "address": "〒024-0055 岩手県北上市大堤南1丁目1-8",
+    "phone": "090-6456-7125",
+    "url": "https://www.warasuba.com",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.263241,
+    "lon": 141.099899,
+    "note": "参考：北上市の施設（花巻市内に該当施設が少ないため近隣情報として掲載）"
+  },
+  {
+    "category": "フリースクール",
+    "name": "KINOスクール",
+    "address": "〒024-0103 岩手県北上市更木30-243",
+    "phone": "090-6053-1976",
+    "url": "https://tsukurukai.net/",
+    "instagram": "https://www.instagram.com/kino__school/",
+    "facebook": "",
+    "lat": 39.343338,
+    "lon": 141.160385,
+    "note": "参考：北上市の施設（花巻市内に該当施設が少ないため近隣情報として掲載）"
+  },
+  {
+    "category": "フリースクール",
+    "name": "ふれあいルーム花巻（岩手県立総合教育センター内）",
+    "address": "〒025-0301 岩手県花巻市北湯口2-82-1",
+    "phone": "0198-27-2331",
+    "url": "https://www1.iwate-ed.jp/06soudan/fureai.pdf",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.461376,
+    "lon": 141.094879,
+    "note": "県立／高校生向け／月〜金9:00-16:00／座標は町丁目レベルの近似値"
+  },
+  {
+    "category": "フリースクール",
+    "name": "未来の扉（特定非営利活動法人未来の扉）",
+    "address": "〒024-0084 岩手県北上市さくら通り2-1-1（北上市文化交流センターさくらホール）",
+    "phone": "",
+    "url": "https://mirainotobira.com/",
+    "instagram": "",
+    "facebook": "https://www.facebook.com/mirainotobira123",
+    "lat": 39.297012,
+    "lon": 141.111633,
+    "note": "参考：北上市の施設（花巻市内に該当施設が少ないため近隣情報として掲載）／小学生〜高校生対象、不登校児童生徒向け学習支援等／※日中の『お昼の寺子屋』プログラムは運営団体サイト上で休止中の表示あり（要確認）"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "放課後等デイサービス事業所「ルンビニー学園」",
+    "address": "岩手県花巻市石鳥谷町中寺林第12地割54番地7",
+    "phone": "0198-45-2714",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.473698,
+    "lon": 141.136871,
+    "note": "運営：社会福祉法人光林会／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "放課後等デイサービスたんぽぽ",
+    "address": "岩手県花巻市大谷地608番地3",
+    "phone": "0198-21-3882",
+    "url": "https://www.tanpopokurabu.jp/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.364567,
+    "lon": 141.105103,
+    "note": "運営：特定非営利活動法人たんぽぽクラブ／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "指定放課後等デイサービス事業所 さくら",
+    "address": "岩手県花巻市不動町一丁目1番地2",
+    "phone": "0198-21-3771",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.379391,
+    "lon": 141.112411,
+    "note": "運営：社会福祉法人花巻市社会福祉協議会／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※ガイドブックでは「イーハトーブ養育センター」として1事業所表記（児童発達支援・放課後等デイサービス・保育所等訪問支援を実施）。さくら／こすもすとの関係は要確認"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "多機能型事業所こすもす",
+    "address": "岩手県花巻市不動町一丁目1番地2",
+    "phone": "0198-21-3771",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.379391,
+    "lon": 141.112411,
+    "note": "運営：社会福祉法人花巻市社会福祉協議会／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※ガイドブックでは「イーハトーブ養育センター」として1事業所表記（児童発達支援・放課後等デイサービス・保育所等訪問支援を実施）。さくら／こすもすとの関係は要確認"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "放課後等デイサービス第3たんぽぽ",
+    "address": "岩手県花巻市中根子字滝ノ沢58-1",
+    "phone": "0198-29-5723",
+    "url": "https://www.tanpopokurabu.jp/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.38419,
+    "lon": 141.094376,
+    "note": "運営：特定非営利活動法人たんぽぽクラブ／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "チャレンジアカデミー花北",
+    "address": "岩手県花巻市下根子535番地",
+    "phone": "0198-29-6796",
+    "url": "http://c-aka.com/hanakita/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.360413,
+    "lon": 141.098541,
+    "note": "運営：株式会社秀賀会／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※住所をガイドブックP36で確認・修正（旧：下根子534-1）"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "チャレンジアカデミー花北Part.2",
+    "address": "岩手県花巻市下根子536-1",
+    "phone": "080-3779-4691",
+    "url": "http://c-aka.com/hanakita2/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.3619,
+    "lon": 141.098694,
+    "note": "運営：株式会社秀賀会／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※ガイドブックP36で新たに確認。座標は町丁目レベルの近似値"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "こどもサポート教室「クラ・ゼミ」花巻校",
+    "address": "岩手県花巻市四日町一丁目4番21号",
+    "phone": "0198-41-4855",
+    "url": "https://kurazemi.co.jp/business/",
+    "instagram": "https://www.instagram.com/kurazemi.hanamaki/",
+    "facebook": "",
+    "lat": 39.395878,
+    "lon": 141.116226,
+    "note": "運営：株式会社クラ・ゼミ／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "多機能事業所ここに",
+    "address": "岩手県花巻市太田第47地割249番地6",
+    "phone": "0198-41-6166",
+    "url": "https://yamaneko-fukushi.com/02-1-kokoni/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.372944,
+    "lon": 141.061081,
+    "note": "運営：一般社団法人やまねこふくし創造舎／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "児童発達支援事業所・放課後等デイサービスぽとり．",
+    "address": "岩手県花巻市下小舟渡237番地3",
+    "phone": "0198-33-1795",
+    "url": "https://hitoshizuku-hanamaki.co.jp/potori/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.392872,
+    "lon": 141.12326,
+    "note": "運営：株式会社ひとしずく／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※電話番号をガイドブックP36/P47で確認・修正（旧：0198-41-3170）。ガイドブックP47では「下小丹渡」表記だがGSI住所データベースには該当なく、本表は従来通り「下小舟渡」を採用"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "多機能型ステーション望(のぞみ)花巻",
+    "address": "岩手県花巻市桜町一丁目258番1号",
+    "phone": "0198-29-4360",
+    "url": "https://tousei.tokyo.jp/nozomi/access_hanamaki/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.376698,
+    "lon": 141.118713,
+    "note": "運営：セブンドット合同会社（日本重症心身障害児支援協会）／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※ガイドブックの障がい児通所支援一覧には掲載なし（別情報源／要確認）"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "多機能型事業所 稀望",
+    "address": "岩手県花巻市大谷地600番地1",
+    "phone": "0198-29-6080",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.365974,
+    "lon": 141.104599,
+    "note": "運営：株式会社稀望／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※ガイドブックP36の電話番号と一致。ただしP47付録では0198-29-6050と表記されており、ガイドブック内で不一致（要確認）"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "COCO.R SAKURADAI",
+    "address": "岩手県花巻市桜台二丁目15番地2号",
+    "phone": "0198-41-9903",
+    "url": "https://www.mazel-kuji.org/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.397747,
+    "lon": 141.103333,
+    "note": "運営：特定非営利活動法人mazel.be／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "児童発達支援・放課後等デイサービス アルコイリス",
+    "address": "岩手県花巻市下根子420番地4",
+    "phone": "0198-41-6166",
+    "url": "https://yamaneko-fukushi.com/02-2-arcoiris/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.363804,
+    "lon": 141.100845,
+    "note": "運営：一般社団法人やまねこふくし創造舎／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※ガイドブックP36の電話番号と一致。ただしP47付録では0198-29-5627と表記されており、ガイドブック内で不一致（要確認）"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "多機能型事業所いろか",
+    "address": "岩手県花巻市石鳥谷町上口一丁目7番13",
+    "phone": "0198-41-3461",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.502125,
+    "lon": 141.154099,
+    "note": "運営：株式会社ケアート／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "グラムレストぽとり．",
+    "address": "岩手県花巻市吹張町4番41号",
+    "phone": "0198-33-1417",
+    "url": "https://hitoshizuku-hanamaki.co.jp/potori/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.389351,
+    "lon": 141.114746,
+    "note": "運営：株式会社ひとしずく／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※電話番号をガイドブックP36/P47で確認・修正（旧：0198-41-3170）"
+  },
+  {
+    "category": "放課後等デイサービス",
+    "name": "多機能型事業所やまねこがみたそら",
+    "address": "岩手県花巻市南諏訪町2番地16",
+    "phone": "0198-41-6120",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.369099,
+    "lon": 141.103851,
+    "note": "運営：株式会社宙の里／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※電話番号をガイドブックP36で確認・修正（旧：0198-41-6166）"
+  },
+  {
+    "category": "学習塾",
+    "name": "個別指導 スクールIE 花巻校",
+    "address": "〒025-0065 岩手県花巻市材木町18-2 滝田ビル1F",
+    "phone": "0198-21-5598",
+    "url": "https://www.schoolie-net.jp/classrooms/detail/477/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.389393,
+    "lon": 141.108551,
+    "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
+  },
+  {
+    "category": "学習塾",
+    "name": "ナビ個別指導学院 花巻校",
+    "address": "〒025-0092 岩手県花巻市大通り1丁目14-35 2F",
+    "phone": "0120-941-967",
+    "url": "https://www.navi-school.com/school/iwate/hanamaki/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.39109,
+    "lon": 141.112778,
+    "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
+  },
+  {
+    "category": "学習塾",
+    "name": "個別指導 学参 花巻校（ナビ個別指導学院内）",
+    "address": "〒025-0092 岩手県花巻市大通り1丁目14-35 2F",
+    "phone": "",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.39109,
+    "lon": 141.112778,
+    "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
+  },
+  {
+    "category": "学習塾",
+    "name": "進学個別教室まつがく 花巻教室",
+    "address": "岩手県花巻市桜台2-3-25",
+    "phone": "",
+    "url": "https://www.matsugaku.jp/class_detail.cgi?name=hanamaki",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.397579,
+    "lon": 141.106354,
+    "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
+  },
+  {
+    "category": "学習塾",
+    "name": "KATEKYO学院 花巻吹張校",
+    "address": "〒025-0078 岩手県花巻市吹張町10-34 戸田ビル2F",
+    "phone": "",
+    "url": "https://katekyo-iwate.com/hanamaki/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.386326,
+    "lon": 141.115082,
+    "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
+  },
+  {
+    "category": "学習塾",
+    "name": "銀河花巻個別指導学習塾",
+    "address": "〒025-0064 岩手県花巻市桜台2丁目23-8",
+    "phone": "080-3339-3735",
+    "url": "https://ginga-hanamaki.com/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.397758,
+    "lon": 141.105347,
+    "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
+  },
+  {
+    "category": "学習塾",
+    "name": "ほめのば学習塾",
+    "address": "〒025-0064 岩手県花巻市桜台2丁目27-14",
+    "phone": "0198-41-8550",
+    "url": "https://www.homenoba.com/",
+    "instagram": "https://www.instagram.com/home_noba/",
+    "facebook": "https://www.facebook.com/homenoba/",
+    "lat": 39.399956,
+    "lon": 141.104858,
+    "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
+  },
+  {
+    "category": "学習塾",
+    "name": "Ｍ進個別指導学院 花巻校（MCS進学研究会）",
+    "address": "〒025-0092 岩手県花巻市大通り1丁目1-43-2 花巻駅2F",
+    "phone": "0198-21-1135",
+    "url": "https://www.mcs2u.com/branch/hanamaki/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.393391,
+    "lon": 141.110748,
+    "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
+  },
+  {
+    "category": "学習塾",
+    "name": "家庭教師センター PCメイト",
+    "address": "〒025-0016 岩手県花巻市高木第15地割34-5",
+    "phone": "0198-22-5282",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.389114,
+    "lon": 141.134048,
+    "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
+  },
+  {
+    "category": "学習塾",
+    "name": "アクトゼミナール",
+    "address": "岩手県花巻市石鳥谷町好地第7地割125-7",
+    "phone": "0198-45-4363",
+    "url": "https://www.actseminar.biz/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.500217,
+    "lon": 141.149384,
+    "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
+  },
+  {
+    "category": "学習塾",
+    "name": "公文式 花巻桜町教室",
+    "address": "〒025-0084 岩手県花巻市桜町4丁目120-2 ホープハイツⅢ A-105",
+    "phone": "0198-23-1668",
+    "url": "https://www.kumon.ne.jp/enter/search/classroom/1439030084/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.37476,
+    "lon": 141.122711,
+    "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
+  },
+  {
+    "category": "学習塾",
+    "name": "公文式 石鳥谷教室",
+    "address": "〒028-3101 岩手県花巻市石鳥谷町好地4-80-196",
+    "phone": "090-5842-7855",
+    "url": "https://www.kumon.ne.jp/enter/search/classroom/1693943101/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.500217,
+    "lon": 141.149384,
+    "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
+  },
+  {
+    "category": "学習塾",
+    "name": "公文式 笹間教室",
+    "address": "〒025-0133 岩手県花巻市中笹間5-138",
+    "phone": "090-1061-8784",
+    "url": "https://www.kumon.ne.jp/enter/search/classroom/1151690133/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.343815,
+    "lon": 141.045074,
+    "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
+  },
+  {
+    "category": "こども食堂",
+    "name": "ぬくまる食堂フードパントリー",
+    "address": "〒025-0095 花巻市石神町364番地（花巻市総合福祉センター内）",
+    "phone": "090-2951-4190（ぬくまる実行委員会事務局）",
+    "url": "https://nukumaru-hanamaki.jimdofree.com/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.381271,
+    "lon": 141.103058,
+    "note": "対象：ひとり親世帯・多子世帯（0歳〜高校生）／毎月1回17:00-19:00・LINE事前予約制"
+  },
+  {
+    "category": "こども食堂",
+    "name": "コミュニティ食堂 とりあえずココ・クレバ",
+    "address": "岩手県花巻市若葉町3丁目14-30 ココ・イルバ（ココ・タベルバ・ラパン内）",
+    "phone": "070-2434-8739",
+    "url": "https://www.coco-aruba.com/kureba/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.386425,
+    "lon": 141.102097,
+    "note": "第1・3水曜15:30-19:00／はなまきこどもネットワーク会員名簿：担当 阿部・岡田"
+  },
+  {
+    "category": "こども食堂",
+    "name": "東和町「みんなでごはん」",
+    "address": "〒028-0115 岩手県花巻市東和町安俵６区７１（東和総合福祉センター）",
+    "phone": "080-6290-4903",
+    "url": "",
+    "instagram": "https://www.instagram.com/min_goha/",
+    "facebook": "",
+    "lat": 39.384319,
+    "lon": 141.224472,
+    "note": "Instagram: @min_goha"
+  },
+  {
+    "category": "こども食堂",
+    "name": "子ども食堂 浜ちゃん（おさかな浜ちゃん）",
+    "address": "花巻市轟木9地割22-3",
+    "phone": "080-1830-7323",
+    "url": "",
+    "instagram": "https://www.instagram.com/hama_natu0813/",
+    "facebook": "",
+    "lat": 39.360508,
+    "lon": 141.038818,
+    "note": "担当：畠山奈津子"
+  },
+  {
+    "category": "学習支援・居場所",
+    "name": "ぽっぽproject（ののはなハウス）",
+    "address": "花巻市中笹間5地割31番地（要確認）",
+    "phone": "",
+    "url": "https://poppoproject.jimdofree.com/",
+    "instagram": "https://www.instagram.com/nonohanahouse/",
+    "facebook": "",
+    "lat": 39.344761,
+    "lon": 141.042969,
+    "note": "在宅支援・居場所・交流会等の複合活動（重い障がいのある方の家族支援が中心）／はなまきこどもネットワーク参加団体"
+  },
+  {
+    "category": "学習支援・居場所",
+    "name": "さくらまち寺子屋",
+    "address": "花巻市桜町一丁目6-28",
+    "phone": "090-2418-0166",
+    "url": "https://hananoba.com/terakoya/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.37669,
+    "lon": 141.117081,
+    "note": "団体：特定非営利活動法人はなのば／代表：多田真弓"
+  },
+  {
+    "category": "こども食堂",
+    "name": "笑shend（やぶ屋総本店）",
+    "address": "花巻市吹張町7-17",
+    "phone": "",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.387718,
+    "lon": 141.114792,
+    "note": "担当：斎藤"
+  },
+  {
+    "category": "こども食堂",
+    "name": "こども食堂 チンシュイ",
+    "address": "花巻市本舘3丁目7-1",
+    "phone": "080-1835-8898",
+    "url": "https://www.instagram.com/chinsyui2023/",
+    "instagram": "https://www.instagram.com/chinsyui2023/",
+    "facebook": "",
+    "lat": 39.410484,
+    "lon": 141.118057,
+    "note": "担当：清水克憲"
+  },
+  {
+    "category": "こども食堂",
+    "name": "モヒカン食堂",
+    "address": "花巻市高木第10-67-1",
+    "phone": "080-1802-9573",
+    "url": "https://www.instagram.com/mohikan_syokudo/",
+    "instagram": "https://www.instagram.com/mohikan_syokudo/",
+    "facebook": "",
+    "lat": 39.386868,
+    "lon": 141.140472,
+    "note": "担当：及川晃史"
+  },
+  {
+    "category": "保育園",
+    "name": "西公園保育園",
+    "address": "花巻市南万丁目1008-1",
+    "phone": "23-2193",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019085/1019104.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.390549,
+    "lon": 141.098312,
+    "note": "施設種別：保育園（公立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "宮野目保育園",
+    "address": "花巻市西宮野目6-100",
+    "phone": "26-2128",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019085/1019106.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.423512,
+    "lon": 141.11644,
+    "note": "施設種別：保育園（公立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "湯口保育園",
+    "address": "花巻市上根子字中野13-13",
+    "phone": "28-2940",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019085/1019107.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.389278,
+    "lon": 141.052597,
+    "note": "施設種別：保育園（公立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "太田保育園",
+    "address": "花巻市太田32-155-3",
+    "phone": "28-2058",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019085/1019108.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.37487,
+    "lon": 141.043182,
+    "note": "施設種別：保育園（公立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "大迫保育園",
+    "address": "花巻市大迫町大迫4-22-1",
+    "phone": "48-3226",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019085/1019109.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.472183,
+    "lon": 141.285965,
+    "note": "施設種別：保育園（公立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "小山田保育園",
+    "address": "花巻市東和町北川目2-290",
+    "phone": "42-2215",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019085/1019113.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.416943,
+    "lon": 141.230118,
+    "note": "施設種別：保育園（公立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "成島保育園",
+    "address": "花巻市東和町安俵9-307",
+    "phone": "42-2216",
+    "url": "https://www.city.hanamaki.iwate.jp/shisetsu/1019084/1019085/1019115.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.371132,
+    "lon": 141.208344,
+    "note": "施設種別：保育園（公立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "めぐみ保育園",
+    "address": "花巻市山の神384-1",
+    "phone": "24-1452",
+    "url": "https://www.megumi-hoikuen.ed.jp/",
+    "instagram": "",
+    "facebook": "https://www.facebook.com/megumifukushikai.megumihoikuen/",
+    "lat": 39.358719,
+    "lon": 141.108337,
+    "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "松園保育園",
+    "address": "花巻市松園町391-8",
+    "phone": "24-6605",
+    "url": "http://matsuzonofukushikai.jp/matsuzonohoikuen/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.409664,
+    "lon": 141.098434,
+    "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "花巻太陽の子保育園",
+    "address": "花巻市星が丘一丁目10-15",
+    "phone": "22-4445",
+    "url": "",
+    "instagram": "",
+    "facebook": "https://www.facebook.com/pages/花巻太陽の子保育園/1697328593900776/",
+    "lat": 39.402153,
+    "lon": 141.101715,
+    "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "花巻太陽の子保育園分園",
+    "address": "花巻市星が丘一丁目8-2",
+    "phone": "41-4923",
+    "url": "",
+    "instagram": "",
+    "facebook": "https://www.facebook.com/pages/花巻太陽の子保育園/1697328593900776/",
+    "lat": 39.401058,
+    "lon": 141.101379,
+    "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "おひさま保育園",
+    "address": "花巻市上根子字米倉220-2",
+    "phone": "29-4096",
+    "url": "http://ootani-ohisamahoikuen.jp/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.381908,
+    "lon": 141.08667,
+    "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "日居城野保育園",
+    "address": "花巻市天下田121-1",
+    "phone": "41-3330",
+    "url": "http://matsuzonofukushikai.jp/hiijyounohoikuen/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.413036,
+    "lon": 141.103775,
+    "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "笹間保育園",
+    "address": "花巻市北笹間17-77",
+    "phone": "29-2038",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.353226,
+    "lon": 141.048294,
+    "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "みどりの家保育園",
+    "address": "花巻市不動33-5",
+    "phone": "41-8311",
+    "url": "https://midorinohoikuen.com/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.377785,
+    "lon": 141.108902,
+    "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より／市公式・運営元サイトとも「みどりの保育園」表記（「家」なし）。住所・電話は完全一致"
+  },
+  {
+    "category": "保育園",
+    "name": "わこのいえ保育園",
+    "address": "花巻市城内211-3",
+    "phone": "41-5217",
+    "url": "https://www.wakonoie-npo.jp/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.390049,
+    "lon": 141.121765,
+    "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "こどものくに保育園",
+    "address": "花巻市東町12-58",
+    "phone": "29-5222",
+    "url": "https://top.kodomonokuni.net/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.38448,
+    "lon": 141.122467,
+    "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "八幡保育園",
+    "address": "花巻市石鳥谷町八幡1-30-7",
+    "phone": "45-2256",
+    "url": "https://i-hoiku.kumiai-js.com/hoikuen.html#hatiman",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.472279,
+    "lon": 141.150543,
+    "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "八重畑保育園",
+    "address": "花巻市石鳥谷町猪鼻7-53-4",
+    "phone": "47-2012",
+    "url": "https://i-hoiku.kumiai-js.com/hoikuen.html#yaehata",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.446381,
+    "lon": 141.185669,
+    "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "新堀保育園",
+    "address": "花巻市石鳥谷町新堀40-27-8",
+    "phone": "45-3403",
+    "url": "https://i-hoiku.kumiai-js.com/hoikuen.html#nibori",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.486206,
+    "lon": 141.17778,
+    "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "みつば（事業所内保育施設）",
+    "address": "花巻市諏訪500",
+    "phone": "21-3217",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.370293,
+    "lon": 141.103409,
+    "note": "施設種別：保育園（国立病院機構花巻病院）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より／従業員の子と地域の子を対象。定員6名"
+  },
+  {
+    "category": "保育園",
+    "name": "たんぽぽえん（認可外保育施設）",
+    "address": "花巻市西宮野目2-102",
+    "phone": "26-2330",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.423512,
+    "lon": 141.11644,
+    "note": "施設種別：保育園／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "くくる保育園（認可外・企業主導型・一般社団法人恵幸会）",
+    "address": "花巻市野田352-2",
+    "phone": "29-6868",
+    "url": "https://www.kukuruhanamaki.com/nurseryschool/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.399342,
+    "lon": 141.09491,
+    "note": "施設種別：保育園／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "保育園",
+    "name": "ママこども保育園（認可外・企業主導型・医療法人ハピネス）",
+    "address": "花巻市高木19-53-3",
+    "phone": "41-6677",
+    "url": "https://happiness-hanamaki.com/",
+    "instagram": "https://www.instagram.com/mamakodomohoiku/",
+    "facebook": "",
+    "lat": 39.385807,
+    "lon": 141.141663,
+    "note": "施設種別：保育園／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
+  },
+  {
+    "category": "小規模保育",
+    "name": "わこの家",
+    "address": "花巻市花城町8-8",
+    "phone": "23-3522",
+    "url": "https://www.wakonoie-npo.jp/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.389538,
+    "lon": 141.118301,
+    "note": "施設種別：小規模保育施設（0〜2歳児対象）／花巻市子育てガイドブック（令和8年6月改訂版）P15より"
+  },
+  {
+    "category": "小規模保育",
+    "name": "ピュア・チャイルド園",
+    "address": "花巻市若葉町二丁目12-34",
+    "phone": "29-6061",
+    "url": "",
+    "instagram": "https://www.instagram.com/purechilden",
+    "facebook": "",
+    "lat": 39.389618,
+    "lon": 141.104462,
+    "note": "施設種別：小規模保育施設（0〜2歳児対象）／花巻市子育てガイドブック（令和8年6月改訂版）P15より"
+  },
+  {
+    "category": "小規模保育",
+    "name": "ひよこ",
+    "address": "花巻市下似内10-23-1",
+    "phone": "41-4150",
+    "url": "https://www.hiyoko-hanamaki.jp/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.404881,
+    "lon": 141.131805,
+    "note": "施設種別：小規模保育施設（0〜2歳児対象）／花巻市子育てガイドブック（令和8年6月改訂版）P15より"
+  },
+  {
+    "category": "小規模保育",
+    "name": "ぎんどろ",
+    "address": "花巻市石神町364",
+    "phone": "41-6122",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.381271,
+    "lon": 141.103058,
+    "note": "施設種別：小規模保育施設（0〜2歳児対象）／花巻市子育てガイドブック（令和8年6月改訂版）P15より"
+  },
+  {
+    "category": "小規模保育",
+    "name": "つくし",
+    "address": "花巻市松園町365-13",
+    "phone": "23-2769",
+    "url": "http://matsuzonofukushikai.jp/tsukushihoikuen/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.410908,
+    "lon": 141.099945,
+    "note": "施設種別：小規模保育施設（0〜2歳児対象）／花巻市子育てガイドブック（令和8年6月改訂版）P15より"
+  },
+  {
+    "category": "小規模保育",
+    "name": "よつば",
+    "address": "花巻市西宮野目7-171-2",
+    "phone": "29-6620",
+    "url": "https://jyoseitokonomirai.org/syoukibohoiku",
+    "instagram": "",
+    "facebook": "https://www.facebook.com/jyoseitokonomirai/",
+    "lat": 39.423512,
+    "lon": 141.11644,
+    "note": "施設種別：小規模保育施設（0〜2歳児対象）／花巻市子育てガイドブック（令和8年6月改訂版）P15より"
+  },
+  {
+    "category": "幼稚園",
+    "name": "花巻幼稚園（公立）",
+    "address": "花巻市城内10-5",
+    "phone": "23-5301",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.389927,
+    "lon": 141.11937,
+    "note": "施設種別：幼稚園／定員140／保育時間8:30-13:30／送迎バスなし"
+  },
+  {
+    "category": "幼稚園",
+    "name": "大谷幼稚園（私立）",
+    "address": "花巻市愛宕町7-34",
+    "phone": "22-4575",
+    "url": "https://www.ki.aso.ac.jp/ohtani/",
+    "instagram": "https://www.instagram.com/ootani.aso/",
+    "facebook": "",
+    "lat": 39.395813,
+    "lon": 141.113922,
+    "note": "施設種別：幼稚園／定員320／保育時間9:00-13:30／送迎バスあり"
+  },
+  {
+    "category": "幼稚園",
+    "name": "湯口大谷幼稚園（私立）",
+    "address": "花巻市湯口字平林47-1",
+    "phone": "28-2328",
+    "url": "http://www.ki.aso.ac.jp/yuguchi/",
+    "instagram": "https://www.instagram.com/yuguchiotani.aso",
+    "facebook": "",
+    "lat": 39.401463,
+    "lon": 141.037643,
+    "note": "施設種別：幼稚園／定員15／保育時間9:00-13:30／送迎バスあり"
+  },
+  {
+    "category": "幼稚園",
+    "name": "中央みのり幼稚園（私立）",
+    "address": "花巻市大谷地451-1",
+    "phone": "24-1553",
+    "url": "https://minori241553.wixsite.com/minori",
+    "instagram": "https://www.instagram.com/chuuouminori_youtien_",
+    "facebook": "",
+    "lat": 39.366535,
+    "lon": 141.101501,
+    "note": "施設種別：幼稚園／定員45／保育時間8:30-13:30／送迎バスあり"
+  },
+  {
+    "category": "幼稚園",
+    "name": "花巻ささま幼稚園（私立）",
+    "address": "花巻市北笹間21-63",
+    "phone": "29-2736",
+    "url": "http://www.sasayou.jp/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.349827,
+    "lon": 141.049759,
+    "note": "施設種別：幼稚園／定員45／保育時間9:00-13:00／送迎バスあり"
+  },
+  {
+    "category": "こども園",
+    "name": "勝乃こども園",
+    "address": "花巻市中根子字明堂26",
+    "phone": "23-6274",
+    "url": "https://www.ans.co.jp/n/mutsumi-ho/index.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.37722,
+    "lon": 141.100601,
+    "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より／運営元サイトでは「縢乃こども園」表記だが住所完全一致（表記ゆれの可能性）"
+  },
+  {
+    "category": "こども園",
+    "name": "たかきこども園",
+    "address": "花巻市高木20-200-308",
+    "phone": "24-1300",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.385807,
+    "lon": 141.141663,
+    "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
+  },
+  {
+    "category": "こども園",
+    "name": "みなみこども園",
+    "address": "花巻市桜木町二丁目209",
+    "phone": "23-4051",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.380623,
+    "lon": 141.108292,
+    "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
+  },
+  {
+    "category": "こども園",
+    "name": "やさわこども園",
+    "address": "花巻市矢沢9-18",
+    "phone": "31-2021",
+    "url": "http://www.yasawa.jp/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.407524,
+    "lon": 141.179779,
+    "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
+  },
+  {
+    "category": "こども園",
+    "name": "にじいろこども園",
+    "address": "花巻市東宮野目13-95-4",
+    "phone": "41-3022",
+    "url": "http://central-hanamaki.com/nijiirokodomoen/",
+    "instagram": "",
+    "facebook": "https://www.facebook.com/nijiirokodomoen/",
+    "lat": 39.413666,
+    "lon": 141.12941,
+    "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
+  },
+  {
+    "category": "こども園",
+    "name": "島こども園",
+    "address": "花巻市東十二丁目14-36-3",
+    "phone": "23-5096",
+    "url": "http://shimahoikuen.com/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.369694,
+    "lon": 141.134995,
+    "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
+  },
+  {
+    "category": "こども園",
+    "name": "にまいばしこども園",
+    "address": "花巻市二枚橋町一丁目58-1",
+    "phone": "26-2529",
+    "url": "https://nimaibashihoikuen.jp/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.442417,
+    "lon": 141.129791,
+    "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
+  },
+  {
+    "category": "こども園",
+    "name": "第二若葉保育園",
+    "address": "花巻市南川原町135-8",
+    "phone": "24-7423",
+    "url": "http://dai2wakaba.sakura.ne.jp/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.382633,
+    "lon": 141.115295,
+    "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
+  },
+  {
+    "category": "こども園",
+    "name": "ぴっころこども園",
+    "address": "花巻市諏訪町二丁目4-7",
+    "phone": "29-5722",
+    "url": "http://www.j-chihirokai.or.jp/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.374908,
+    "lon": 141.110519,
+    "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
+  },
+  {
+    "category": "こども園",
+    "name": "南城こども園",
+    "address": "花巻市桜町四丁目230",
+    "phone": "23-3153",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.375381,
+    "lon": 141.119293,
+    "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
+  },
+  {
+    "category": "こども園",
+    "name": "若葉保育園",
+    "address": "花巻市若葉町二丁目1-22",
+    "phone": "23-6634",
+    "url": "http://wakaba1.sakura.ne.jp/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.389584,
+    "lon": 141.106567,
+    "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
+  },
+  {
+    "category": "こども園",
+    "name": "ゆもとこども園",
+    "address": "花巻市湯本3-79-11",
+    "phone": "27-3216",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.442898,
+    "lon": 141.083862,
+    "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
+  },
+  {
+    "category": "こども園",
+    "name": "いしどりやこども園",
+    "address": "花巻市石鳥谷町好地6-30-6",
+    "phone": "41-5593",
+    "url": "https://i-hoiku.kumiai-js.com/kodomoen.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.500217,
+    "lon": 141.149384,
+    "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
+  },
+  {
+    "category": "こども園",
+    "name": "つちざわこども園",
+    "address": "花巻市東和町土沢2区315",
+    "phone": "42-3820",
+    "url": "https://tutizawa.com/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.388664,
+    "lon": 141.225204,
+    "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
+  },
+  {
+    "category": "産前・産後サポート",
+    "name": "産前産後ケアハウス まんまるぽっと",
+    "address": "花巻市下幅21-36",
+    "phone": "090-2981-1135",
+    "url": "https://manmaru.org/%E3%81%BE%E3%82%93%E3%81%BE%E3%82%8B%E3%81%BD%E3%81%A3%E3%81%A8/",
+    "instagram": "",
+    "facebook": "https://www.facebook.com/manmaru.iwate/",
+    "lat": 39.400135,
+    "lon": 141.114395,
+    "note": "デイサービス（全日型・半日型）・訪問相談を実施。「花巻まんまるサロン／体操」（花北振興センター）の運営元でもある／ガイドブックP5-6・P47より"
+  },
+  {
+    "category": "子育て支援サービス",
+    "name": "病後児保育室 フラワーハウス",
+    "address": "花巻市花城町7番21号",
+    "phone": "0198-23-2063",
+    "url": "https://www.city.hanamaki.iwate.jp/kosodate_kyoiku/kosodate/azukeru/byougojihoiku/1001443.html",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.389648,
+    "lon": 141.117569,
+    "note": "病気回復期のお子さんを一時的に保育"
+  },
+  {
+    "category": "子育て支援サービス",
+    "name": "はなまきファミリー・サポート・センター",
+    "address": "花巻市花城町1番47号（こどもセンター内）",
+    "phone": "0198-24-5055（FAX兼用）",
+    "url": "",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.390011,
+    "lon": 141.115479,
+    "note": "開所：月〜金9:00-16:30（祝日休）／子育ての相互援助活動のあっせん／ガイドブックP22"
+  }
+];
+
+// 同一座標（住所を町丁目レベルまでしか特定できない施設が複数あるため）に立つピンを
+// 少しだけ円状にずらして、重なりが分かるようにする
+function spreadOverlaps(data) {
+  const groups = {};
+  data.forEach(d => {
+    const key = d.lat.toFixed(6) + ',' + d.lon.toFixed(6);
+    (groups[key] = groups[key] || []).push(d);
+  });
+  Object.values(groups).forEach(group => {
+    if (group.length <= 1) return;
+    const R = 0.00045; // 緯度1度あたり約111kmなので、約50m相当
+    group.forEach((d, i) => {
+      const angle = (2 * Math.PI * i) / group.length;
+      d._colocatedCount = group.length;
+      d.lat = d.lat + R * Math.cos(angle);
+      d.lon = d.lon + (R * Math.sin(angle)) / Math.cos(d.lat * Math.PI / 180);
+    });
+  });
+}
+spreadOverlaps(DATA);
+
+// カテゴリごとの色（dataviz参照パレットのカテゴリカル配色）とアイコン
+const CATEGORY_GROUPS = [
+  { title: "学校・フリースクール", cats: ["小学校","中学校","フリースクール","高等学校"], borderColor: "#1D4ED8" },
+  { title: "未就学児", cats: ["支援センター","保育園","小規模保育","幼稚園","こども園"], borderColor: "#E11D48" },
+  { title: "学習・障がい児支援", cats: ["放課後等デイサービス","学習塾","学習支援・居場所"], borderColor: "#5B21B6" },
+  { title: "地域施設・居場所", cats: ["図書館","振興センター","学童クラブ"], borderColor: "#D3A50E" },
+  { title: "食・子育てサポート", cats: ["こども食堂","子育て支援サービス","産前・産後サポート"], borderColor: "#166534" }
+];
+
+const CATEGORY_CONFIG = {
+  "小学校":     { color: "#1D4ED8", icon: "小", weight: 400, scale: 0.8 },
+  "中学校":     { color: "#0D9488", icon: "中", weight: 400, scale: 0.8 },
+  "フリースクール": { color: "#38BDF8", icon: "フ", weight: 400, scale: 0.8 },
+  "高等学校":   { color: "#8B5CF6", icon: "高", weight: 400, scale: 0.8 },
+  "支援センター": { color: "#E11D48", icon: "支", weight: 400, scale: 0.8 },
+  "保育園":     { color: "#991B1B", icon: "保", weight: 400, scale: 0.8 },
+  "小規模保育": { color: "#FC83C4", icon: "小", weight: 400, scale: 0.8 },
+  "幼稚園":     { color: "#FF199E", icon: "幼", weight: 400, scale: 0.8 },
+  "こども園":   { color: "#F97316", icon: "こ", weight: 400, scale: 0.8 },
+  "放課後等デイサービス": { color: "#5B21B6", icon: "放", weight: 400, scale: 0.8 },
+  "学習塾":     { color: "#D946EF", icon: "塾", weight: 400, scale: 0.8 },
+  "学習支援・居場所": { color: "#96204F", icon: "居", weight: 400, scale: 0.8 },
+  "図書館":     { color: "#D3A50E", icon: "本", weight: 400, scale: 0.8 },
+  "振興センター": { color: "#EA580C", icon: "振", weight: 400, scale: 0.8 },
+  "学童クラブ": { color: "#854D0E", icon: "学", weight: 400, scale: 0.8 },
+  "こども食堂": { color: "#166534", icon: "食", weight: 400, scale: 0.8 },
+  "産前・産後サポート": { color: "#84CC16", icon: "産", weight: 400, scale: 0.8 },
+  "子育て支援サービス": { color: "#0F9B8E", icon: "子", weight: 400, scale: 0.8 }
+};
+
+function makeIcon(color, icon, weight, scale) {
+  weight = weight || 700;
+  scale = scale || 1;
+  const html = `
+    <div style="
+      width:28px;height:28px;
+      background:${color};
+      border:2px solid #fff;
+      border-radius:50% 50% 50% 0;
+      transform:rotate(-45deg);
+      box-shadow:0 1px 4px rgba(0,0,0,0.35);
+      display:flex;align-items:center;justify-content:center;
+    ">
+      <span style="
+        transform:rotate(45deg) scale(${scale});
+        color:#fff;font-weight:${weight};line-height:1;
+        font-size:13px;
+      ">${icon}</span>
+    </div>`;
+  return L.divIcon({
+    html,
+    className: "",
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -26]
+  });
+}
+
+function shortAddress(address) {
+  if (!address) return "";
+  const m = address.match(/花巻市[^0-9第]+/);
+  return m ? m[0] : address;
+}
+
+const map = L.map('map', { scrollWheelZoom: true }).setView([39.40, 141.13], 11);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+const ALL_CATS = CATEGORY_GROUPS.flatMap(g => g.cats);
+// 初期状態はすべてOFF（色のない状態）から始める
+const activeCats = new Set();
+
+const layerGroups = {};
+ALL_CATS.forEach(cat => {
+  layerGroups[cat] = L.layerGroup();
+});
+
+const allMarkers = [];
+
+DATA.forEach(d => {
+  const cfg = CATEGORY_CONFIG[d.category] || { color: '#555', icon: '\ud83d\udccd' };
+  const marker = L.marker([d.lat, d.lon], { icon: makeIcon(cfg.color, cfg.icon, cfg.weight, cfg.scale) });
+  const gmapQuery = `${d.name} ${d.address}`.replace(/\u3012\d{3}-?\d{4}\s*/, '');
+  const gmapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(gmapQuery)}`;
+
+  const popupHtml = `
+    <div class="popup-title">${d.name}</div>
+    <span class="popup-cat" style="background:${cfg.color}">${d.category}</span>
+    <div class="popup-row">\ud83d\udccd <a href="${gmapUrl}" target="_blank" rel="noopener">${d.address}</a></div>
+    ${d.phone ? `<div class="popup-row">\ud83d\udcde <a href="tel:${d.phone.replace(/[^0-9]/g,'')}">${d.phone}</a></div>` : ''}
+    ${d.url ? `<div class="popup-row">\ud83d\udd17 <a href="${d.url}" target="_blank" rel="noopener">${d.url}</a></div>` : ''}
+    ${d.instagram ? `<div class="popup-row">\ud83d\udcf7 <a href="${d.instagram}" target="_blank" rel="noopener">Instagram</a></div>` : ''}
+    ${d.facebook ? `<div class="popup-row">\ud83d\udcd8 <a href="${d.facebook}" target="_blank" rel="noopener">Facebook</a></div>` : ''}
+    ${d.note ? `<div class="popup-note">${d.note}</div>` : ''}
+  `;
+
+  marker.bindPopup(popupHtml);
+  marker.on('click', () => { map.setView([d.lat, d.lon], 15); });
+  marker.addTo(layerGroups[d.category]);
+  allMarkers.push(marker);
+  d._marker = marker;
+});
+
+// facility list（チェックが入っているカテゴリのみ表示）
+const facListEl = document.getElementById('fac-list');
+function renderFacList() {
+  facListEl.innerHTML = '';
+  ALL_CATS.forEach(cat => {
+    if (!activeCats.has(cat)) return;
+    const items = DATA.filter(d => d.category === cat);
+    if (items.length === 0) return;
+    const groupTitle = document.createElement('div');
+    groupTitle.className = 'fac-group-title';
+    groupTitle.textContent = cat;
+    facListEl.appendChild(groupTitle);
+    items.forEach(d => {
+      const item = document.createElement('div');
+      item.className = 'fac-item';
+      item.innerHTML = `<div class="name">${d.name}</div><div class="addr">${shortAddress(d.address)}</div>`;
+      item.addEventListener('click', () => {
+        map.setView([d.lat, d.lon], 16);
+        d._marker.openPopup();
+      });
+      facListEl.appendChild(item);
+    });
+  });
+}
+
+// legend（プルダウン式：大カテゴリのヘッダーをクリックすると、その中の小カテゴリ行が開閉する。
+// 小カテゴリ行はアクセシブルなカスタムトグル行。四角チェックボックスは使わず、色付きドットの塗り／枠だけで状態を示す）
+const legendEl = document.getElementById('legend');
+function toggleCategory(cat, row) {
+  const nowChecked = row.getAttribute('aria-checked') !== 'true';
+  row.setAttribute('aria-checked', String(nowChecked));
+  if (nowChecked) {
+    map.addLayer(layerGroups[cat]);
+    activeCats.add(cat);
+  } else {
+    map.removeLayer(layerGroups[cat]);
+    activeCats.delete(cat);
+  }
+  renderFacList();
+}
+
+function toggleGroup(groupEl) {
+  groupEl.classList.toggle('expanded');
+}
+
+CATEGORY_GROUPS.forEach((group, idx) => {
+  const groupEl = document.createElement('div');
+  groupEl.className = 'legend-group';
+  if (group.borderColor) {
+    groupEl.style.borderColor = group.borderColor;
+  }
+
+  const header = document.createElement('div');
+  header.className = 'legend-group-header';
+  header.setAttribute('role', 'button');
+  header.setAttribute('tabindex', '0');
+  header.setAttribute('aria-expanded', 'false');
+
+  const chevron = document.createElement('span');
+  chevron.className = 'legend-group-chevron';
+  chevron.textContent = '\u203a';
+
+  const titleSpan = document.createElement('span');
+  titleSpan.className = 'legend-group-title';
+  titleSpan.textContent = group.title;
+  if (group.borderColor) {
+    titleSpan.style.color = group.borderColor;
+  }
+
+  const groupCount = group.cats.reduce((sum, cat) => sum + DATA.filter(d => d.category === cat).length, 0);
+  const countSpan = document.createElement('span');
+  countSpan.className = 'legend-group-count';
+  countSpan.textContent = groupCount;
+
+  header.appendChild(chevron);
+  header.appendChild(titleSpan);
+  header.appendChild(countSpan);
+  groupEl.appendChild(header);
+
+  const rowsEl = document.createElement('div');
+  rowsEl.className = 'legend-group-rows';
+
+  group.cats.forEach(cat => {
+    const cfg = CATEGORY_CONFIG[cat];
+    const count = DATA.filter(d => d.category === cat).length;
+
+    const row = document.createElement('div');
+    row.className = 'legend-row';
+    row.setAttribute('role', 'checkbox');
+    row.setAttribute('aria-checked', 'false');
+    row.setAttribute('tabindex', '0');
+
+    const dot = document.createElement('span');
+    dot.className = 'legend-dot';
+    dot.style.setProperty('--dot-color', cfg.color);
+    dot.style.cursor = 'pointer';
+
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'legend-label';
+    labelSpan.textContent = cat;
+
+    const countSpan2 = document.createElement('span');
+    countSpan2.className = 'legend-count';
+    countSpan2.textContent = count;
+
+    row.appendChild(dot);
+    row.appendChild(labelSpan);
+    row.appendChild(countSpan2);
+    rowsEl.appendChild(row);
+
+    // ●（色のドット）にカーソルを置くだけでオン/オフが切り替わる
+    dot.addEventListener('mouseenter', (e) => {
+      e.stopPropagation();
+      toggleCategory(cat, row);
+    });
+    row.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleCategory(cat, row);
+      }
+    });
+  });
+
+  groupEl.appendChild(rowsEl);
+  legendEl.appendChild(groupEl);
+
+  header.addEventListener('click', () => {
+    toggleGroup(groupEl);
+    header.setAttribute('aria-expanded', String(groupEl.classList.contains('expanded')));
+  });
+  header.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      toggleGroup(groupEl);
+      header.setAttribute('aria-expanded', String(groupEl.classList.contains('expanded')));
+    }
+  });
+
+  // 最初のグループだけ初期状態で開いておく（使い方が分かりやすいように）
+  if (idx === 0) {
+    groupEl.classList.add('expanded');
+    header.setAttribute('aria-expanded', 'true');
+  }
+});
+
+renderFacList();
+
+if (allMarkers.length > 0) {
+  const group = L.featureGroup(allMarkers);
+  map.fitBounds(group.getBounds().pad(0.2));
+}
+</script>
+</body>
+</html>
