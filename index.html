@@ -3,7 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>はなまき子育てマップ（試作版）</title>
+<title>はなまき子育てマップ｜花巻市 子育て・学校情報マップ</title>
+<meta name="description" content="花巻市の学校・保育園・こども園・学童・遊び場・子育て支援施設をひとつの地図にまとめた、子育て家庭のための情報マップです。">
+
+<!-- favicon -->
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<!-- OGP -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="はなまき子育てマップ">
+<meta property="og:description" content="花巻市の学校・保育園・こども園・学童・遊び場・子育て支援施設をひとつの地図にまとめた、子育て家庭のための情報マップです。">
+<meta property="og:image" content="https://sobadonburi-hub.github.io/hanamaki-kosodate-map/og-image.png">
+<meta property="og:url" content="https://sobadonburi-hub.github.io/hanamaki-kosodate-map/">
+<meta property="og:site_name" content="はなまき子育てマップ">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="はなまき子育てマップ">
+<meta name="twitter:description" content="花巻市の学校・保育園・こども園・学童・遊び場・子育て支援施設をひとつの地図にまとめた、子育て家庭のための情報マップです。">
+<meta name="twitter:image" content="https://sobadonburi-hub.github.io/hanamaki-kosodate-map/og-image.png">
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
@@ -35,6 +54,7 @@
     gap: 12px;
     flex-wrap: wrap;
   }
+  header .logo { width: 32px; height: 32px; display: block; }
   header h1 { font-size: 16px; margin: 0; font-weight: 700; }
   header .badge {
     font-size: 12px;
@@ -166,9 +186,10 @@
 <body>
 <div id="app">
   <header>
+    <img class="logo" src="logo-header.png" alt="はなまき子育てマップ ロゴ">
     <h1>はなまき子育てマップ</h1>
-    <span class="badge">試作版（189件）</span>
-    <span class="note">動作確認用プロトタイプ</span>
+    <span class="badge">189件掲載</span>
+    <span class="note">岩手県花巻市</span>
   </header>
   <div id="main">
     <div id="sidebar">
@@ -2478,7 +2499,7 @@ const CATEGORY_GROUPS = [
   { title: "未就学児", cats: ["支援センター","保育園","小規模保育","幼稚園","こども園"], borderColor: "#E11D48" },
   { title: "学習・障がい児支援", cats: ["放課後等デイサービス","学習塾","学習支援・居場所"], borderColor: "#5B21B6" },
   { title: "地域施設・居場所", cats: ["図書館","振興センター","学童クラブ"], borderColor: "#D3A50E" },
-  { title: "食・子育てサポート", cats: ["こども食堂","子育て支援サービス","産前・産後サポート"], borderColor: "#166534" }
+  { title: "子育てサポート", cats: ["こども食堂","子育て支援サービス","産前・産後サポート","あそび"], borderColor: "#166534" }
 ];
 
 const CATEGORY_CONFIG = {
@@ -2499,7 +2520,8 @@ const CATEGORY_CONFIG = {
   "学童クラブ": { color: "#854D0E", icon: "学", weight: 400, scale: 0.8 },
   "こども食堂": { color: "#166534", icon: "食", weight: 400, scale: 0.8 },
   "産前・産後サポート": { color: "#84CC16", icon: "産", weight: 400, scale: 0.8 },
-  "子育て支援サービス": { color: "#0F9B8E", icon: "子", weight: 400, scale: 0.8 }
+  "子育て支援サービス": { color: "#0F9B8E", icon: "子", weight: 400, scale: 0.8 },
+  "あそび":     { color: "#8A9102", icon: "遊", weight: 400, scale: 0.8 }
 };
 
 function makeIcon(color, icon, weight, scale) {
