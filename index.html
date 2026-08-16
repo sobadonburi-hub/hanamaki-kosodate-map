@@ -172,46 +172,26 @@
   .fac-item:hover { background: #f5f4f1; }
   .fac-item .name { font-weight: 400; }
   .fac-item .addr { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
-
-  #noloc-section {
-    margin-top: 20px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border);
-  }
-  #noloc-section h2 {
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin: 0 0 4px;
-    padding: 0 6px;
-  }
-  #noloc-section .noloc-desc {
-    font-size: 11.5px;
-    color: var(--text-muted);
-    margin: 0 0 10px;
-    padding: 0 6px;
-  }
-  .noloc-item {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 10px;
-    margin: 0 2px 8px;
-    font-size: 12.5px;
-  }
-  .noloc-item .name { font-weight: 500; font-size: 13px; margin-bottom: 3px; }
-  .noloc-item .cat-badge {
+  .fac-item .noloc-tag {
     display: inline-block;
     font-size: 10.5px;
-    color: #fff;
+    font-weight: 400;
+    color: var(--text-muted);
+    background: #f0efec;
+    border: 1px solid var(--border);
     border-radius: 4px;
-    padding: 1px 6px;
-    margin-bottom: 5px;
+    padding: 0px 5px;
+    margin-left: 6px;
+    vertical-align: middle;
   }
-  .noloc-item .row { color: var(--text-secondary); margin: 2px 0; }
-  .noloc-item .row a { color: #2a78d6; }
-  .noloc-item .note { color: var(--text-muted); font-size: 11px; margin-top: 4px; }
+  .fac-detail {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--border);
+  }
+  .fac-detail .row { font-size: 12.5px; color: var(--text-secondary); margin: 2px 0; }
+  .fac-detail .row a { color: #2a78d6; }
+  .fac-detail .note { font-size: 11.5px; color: var(--text-muted); margin-top: 4px; }
 
   #map { flex: 1; }
 
@@ -247,11 +227,6 @@
     <div id="sidebar">
       <div id="legend"></div>
       <div class="fac-list" id="fac-list"></div>
-      <div id="noloc-section">
-        <h2>拠点を持たない団体・イベント</h2>
-        <p class="noloc-desc">住所が固定されていないため、地図上にはピンを表示していません。活動内容やSNSはこちらをご覧ください。</p>
-        <div id="noloc-list"></div>
-      </div>
     </div>
     <div id="map"></div>
   </div>
@@ -269,6 +244,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.391178,
     "lon": 141.118774,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -281,6 +257,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.386909,
     "lon": 141.102219,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -293,6 +270,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.400326,
     "lon": 141.111969,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -305,6 +283,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.371155,
     "lon": 141.119873,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -317,6 +296,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.390095,
     "lon": 141.056396,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -329,6 +309,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.446262,
     "lon": 141.082565,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -341,6 +322,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.38493,
     "lon": 141.149002,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -353,6 +335,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.424187,
     "lon": 141.128342,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -365,6 +348,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.373749,
     "lon": 141.051605,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -377,6 +361,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.346493,
     "lon": 141.047821,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -389,6 +374,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.462654,
     "lon": 141.28447,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -401,6 +387,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.500217,
     "lon": 141.149384,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -413,6 +400,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.486206,
     "lon": 141.17778,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -425,6 +413,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.472279,
     "lon": 141.150543,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -437,6 +426,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.446381,
     "lon": 141.185669,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -449,6 +439,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.382664,
     "lon": 141.225159,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -461,6 +452,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.388824,
     "lon": 141.102356,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -473,6 +465,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.410809,
     "lon": 141.110901,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -485,6 +478,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.366241,
     "lon": 141.119217,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -497,6 +491,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.391376,
     "lon": 141.054016,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -509,6 +504,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.444786,
     "lon": 141.086258,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -521,6 +517,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.389126,
     "lon": 141.155838,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -533,6 +530,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.425613,
     "lon": 141.124893,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -545,6 +543,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.360508,
     "lon": 141.038818,
+    "hasLocation": true,
     "note": "座標はGSI簡略化住所（大字レベル）による近似値"
   },
   {
@@ -557,6 +556,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.461723,
     "lon": 141.294098,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -569,6 +569,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.465599,
     "lon": 141.145035,
+    "hasLocation": true,
     "note": "座標はGSI簡略化住所（大字レベル）による近似値"
   },
   {
@@ -581,6 +582,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.384293,
     "lon": 141.239502,
+    "hasLocation": true,
     "note": ""
   },
   {
@@ -593,6 +595,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.411385,
     "lon": 141.116028,
+    "hasLocation": true,
     "note": "県立／電話番号は要確認"
   },
   {
@@ -605,6 +608,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.392761,
     "lon": 141.087112,
+    "hasLocation": true,
     "note": "県立／電話番号は要確認"
   },
   {
@@ -617,6 +621,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.440117,
     "lon": 141.141296,
+    "hasLocation": true,
     "note": "県立／電話番号は要確認"
   },
   {
@@ -629,6 +634,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.489197,
     "lon": 141.131302,
+    "hasLocation": true,
     "note": "県立／電話番号は要確認"
   },
   {
@@ -641,6 +647,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.47216,
     "lon": 141.28746,
+    "hasLocation": true,
     "note": "県立／電話番号は要確認"
   },
   {
@@ -653,6 +660,7 @@ const DATA = [
     "facebook": "https://www.facebook.com/hanamakihigashi/",
     "lat": 39.405113,
     "lon": 141.098709,
+    "hasLocation": true,
     "note": "私立／電話番号は要確認"
   },
   {
@@ -665,6 +673,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.384506,
     "lon": 141.101456,
+    "hasLocation": true,
     "note": "開館9:00-18:00"
   },
   {
@@ -677,6 +686,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.384319,
     "lon": 141.224472,
+    "hasLocation": true,
     "note": "開館9:00-18:00／月曜休"
   },
   {
@@ -689,6 +699,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.468525,
     "lon": 141.288605,
+    "hasLocation": true,
     "note": "開館9:00-18:00"
   },
   {
@@ -701,6 +712,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.473698,
     "lon": 141.136871,
+    "hasLocation": true,
     "note": "開館9:00-18:00／月曜休"
   },
   {
@@ -713,6 +725,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.409988,
     "lon": 141.095169,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -725,6 +738,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.396515,
     "lon": 141.113205,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -737,6 +751,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.390453,
     "lon": 141.116241,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -749,6 +764,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.381271,
     "lon": 141.103058,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -761,6 +777,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.370171,
     "lon": 141.118744,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -773,6 +790,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.393803,
     "lon": 141.047668,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -785,6 +803,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.444786,
     "lon": 141.086258,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -797,6 +816,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.385807,
     "lon": 141.140717,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -809,6 +829,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.426224,
     "lon": 141.128265,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -821,6 +842,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.373749,
     "lon": 141.051605,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -833,6 +855,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.358269,
     "lon": 141.051727,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -845,6 +868,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.466721,
     "lon": 141.285263,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -857,6 +881,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.466557,
     "lon": 141.305374,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -869,6 +894,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.461388,
     "lon": 141.291901,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -881,6 +907,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.478146,
     "lon": 141.243256,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -893,6 +920,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.500217,
     "lon": 141.149384,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -905,6 +933,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.511372,
     "lon": 141.065811,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -917,6 +946,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.4706,
     "lon": 141.107742,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -929,6 +959,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.467628,
     "lon": 141.144211,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -941,6 +972,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.442791,
     "lon": 141.202011,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -953,6 +985,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.475319,
     "lon": 141.198257,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -965,6 +998,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.416943,
     "lon": 141.230118,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -977,6 +1011,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.385551,
     "lon": 141.225723,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -989,6 +1024,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.365944,
     "lon": 141.211212,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -1001,6 +1037,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.320518,
     "lon": 141.211304,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -1013,6 +1050,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.360634,
     "lon": 141.257721,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -1025,6 +1063,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.315605,
     "lon": 141.313034,
+    "hasLocation": true,
     "note": "地域住民向けの貸館施設。子ども関連行事での利用も可能"
   },
   {
@@ -1037,6 +1076,7 @@ const DATA = [
     "facebook": "https://www.facebook.com/pages/花巻市役所 こどもセンター/1929933063955594/",
     "lat": 39.390011,
     "lon": 141.115479,
+    "hasLocation": true,
     "note": "対象：生後1か月〜就学前／9:00-16:00・祝日休"
   },
   {
@@ -1049,6 +1089,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.423512,
     "lon": 141.11644,
+    "hasLocation": true,
     "note": "対象年齢：未就学児と推定（要確認）"
   },
   {
@@ -1061,6 +1102,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.472183,
     "lon": 141.285965,
+    "hasLocation": true,
     "note": "対象年齢：未就学児と推定（要確認）"
   },
   {
@@ -1073,6 +1115,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.389584,
     "lon": 141.106567,
+    "hasLocation": true,
     "note": "対象年齢：未就学児と推定（要確認）"
   },
   {
@@ -1085,6 +1128,7 @@ const DATA = [
     "facebook": "https://www.facebook.com/pages/石鳥谷町地域子育て支援センター/1896560177293266/",
     "lat": 39.500217,
     "lon": 141.149384,
+    "hasLocation": true,
     "note": "対象年齢：未就学児と推定（要確認）"
   },
   {
@@ -1097,6 +1141,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.388664,
     "lon": 141.225204,
+    "hasLocation": true,
     "note": "対象年齢：未就学児と推定（要確認）"
   },
   {
@@ -1109,6 +1154,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.391178,
     "lon": 141.118774,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1121,6 +1167,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.386929,
     "lon": 141.10112,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1133,6 +1180,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.396484,
     "lon": 141.112579,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1145,6 +1193,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.375381,
     "lon": 141.119293,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1157,6 +1206,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.391376,
     "lon": 141.054016,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1169,6 +1219,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.446049,
     "lon": 141.085281,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1181,6 +1232,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.38493,
     "lon": 141.149002,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1193,6 +1245,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.424187,
     "lon": 141.128342,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1205,6 +1258,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.372738,
     "lon": 141.04454,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1217,6 +1271,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.346661,
     "lon": 141.048645,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1229,6 +1284,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.462654,
     "lon": 141.28447,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1241,6 +1297,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.500217,
     "lon": 141.149384,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1253,6 +1310,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.486206,
     "lon": 141.17778,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1265,6 +1323,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.472279,
     "lon": 141.150543,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1277,6 +1336,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.442791,
     "lon": 141.202011,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1289,6 +1349,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.382664,
     "lon": 141.225159,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1301,6 +1362,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.389175,
     "lon": 141.118607,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1313,6 +1375,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.374908,
     "lon": 141.110519,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1325,6 +1388,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.397747,
     "lon": 141.103333,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1337,6 +1401,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.388393,
     "lon": 141.100296,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1349,6 +1414,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.393639,
     "lon": 141.119476,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1361,6 +1427,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.402035,
     "lon": 141.10141,
+    "hasLocation": true,
     "note": "対象：小学生（保護者就労等で日中家庭にいない児童）"
   },
   {
@@ -1373,6 +1440,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.390011,
     "lon": 141.115479,
+    "hasLocation": true,
     "note": "公的（花巻市教育委員会）／不登校児童生徒向け。相談受付：火〜金9:00-16:00"
   },
   {
@@ -1385,6 +1453,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.399956,
     "lon": 141.104858,
+    "hasLocation": true,
     "note": "民間（NPO法人）／はなまきこどもネットワーク会員名簿：担当 田代真由子"
   },
   {
@@ -1397,6 +1466,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.263241,
     "lon": 141.099899,
+    "hasLocation": true,
     "note": "参考：北上市の施設（花巻市内に該当施設が少ないため近隣情報として掲載）"
   },
   {
@@ -1409,6 +1479,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.343338,
     "lon": 141.160385,
+    "hasLocation": true,
     "note": "参考：北上市の施設（花巻市内に該当施設が少ないため近隣情報として掲載）"
   },
   {
@@ -1421,6 +1492,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.461376,
     "lon": 141.094879,
+    "hasLocation": true,
     "note": "県立／高校生向け／月〜金9:00-16:00／座標は町丁目レベルの近似値"
   },
   {
@@ -1433,6 +1505,7 @@ const DATA = [
     "facebook": "https://www.facebook.com/mirainotobira123",
     "lat": 39.297012,
     "lon": 141.111633,
+    "hasLocation": true,
     "note": "参考：北上市の施設（花巻市内に該当施設が少ないため近隣情報として掲載）／小学生〜高校生対象、不登校児童生徒向け学習支援等／※日中の『お昼の寺子屋』プログラムは運営団体サイト上で休止中の表示あり（要確認）"
   },
   {
@@ -1445,6 +1518,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.473698,
     "lon": 141.136871,
+    "hasLocation": true,
     "note": "運営：社会福祉法人光林会／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より"
   },
   {
@@ -1457,6 +1531,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.364567,
     "lon": 141.105103,
+    "hasLocation": true,
     "note": "運営：特定非営利活動法人たんぽぽクラブ／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より"
   },
   {
@@ -1469,6 +1544,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.379391,
     "lon": 141.112411,
+    "hasLocation": true,
     "note": "運営：社会福祉法人花巻市社会福祉協議会／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※ガイドブックでは「イーハトーブ養育センター」として1事業所表記（児童発達支援・放課後等デイサービス・保育所等訪問支援を実施）。さくら／こすもすとの関係は要確認"
   },
   {
@@ -1481,6 +1557,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.379391,
     "lon": 141.112411,
+    "hasLocation": true,
     "note": "運営：社会福祉法人花巻市社会福祉協議会／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※ガイドブックでは「イーハトーブ養育センター」として1事業所表記（児童発達支援・放課後等デイサービス・保育所等訪問支援を実施）。さくら／こすもすとの関係は要確認"
   },
   {
@@ -1493,6 +1570,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.38419,
     "lon": 141.094376,
+    "hasLocation": true,
     "note": "運営：特定非営利活動法人たんぽぽクラブ／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より"
   },
   {
@@ -1505,6 +1583,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.360413,
     "lon": 141.098541,
+    "hasLocation": true,
     "note": "運営：株式会社秀賀会／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※住所をガイドブックP36で確認・修正（旧：下根子534-1）"
   },
   {
@@ -1517,6 +1596,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.3619,
     "lon": 141.098694,
+    "hasLocation": true,
     "note": "運営：株式会社秀賀会／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※ガイドブックP36で新たに確認。座標は町丁目レベルの近似値"
   },
   {
@@ -1529,6 +1609,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.395878,
     "lon": 141.116226,
+    "hasLocation": true,
     "note": "運営：株式会社クラ・ゼミ／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より"
   },
   {
@@ -1541,6 +1622,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.372944,
     "lon": 141.061081,
+    "hasLocation": true,
     "note": "運営：一般社団法人やまねこふくし創造舎／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より"
   },
   {
@@ -1553,6 +1635,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.392872,
     "lon": 141.12326,
+    "hasLocation": true,
     "note": "運営：株式会社ひとしずく／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※電話番号をガイドブックP36/P47で確認・修正（旧：0198-41-3170）。ガイドブックP47では「下小丹渡」表記だがGSI住所データベースには該当なく、本表は従来通り「下小舟渡」を採用"
   },
   {
@@ -1565,6 +1648,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.376698,
     "lon": 141.118713,
+    "hasLocation": true,
     "note": "運営：セブンドット合同会社（日本重症心身障害児支援協会）／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※ガイドブックの障がい児通所支援一覧には掲載なし（別情報源／要確認）"
   },
   {
@@ -1577,6 +1661,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.365974,
     "lon": 141.104599,
+    "hasLocation": true,
     "note": "運営：株式会社稀望／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※ガイドブックP36の電話番号と一致。ただしP47付録では0198-29-6050と表記されており、ガイドブック内で不一致（要確認）"
   },
   {
@@ -1589,6 +1674,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.397747,
     "lon": 141.103333,
+    "hasLocation": true,
     "note": "運営：特定非営利活動法人mazel.be／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より"
   },
   {
@@ -1601,6 +1687,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.363804,
     "lon": 141.100845,
+    "hasLocation": true,
     "note": "運営：一般社団法人やまねこふくし創造舎／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※ガイドブックP36の電話番号と一致。ただしP47付録では0198-29-5627と表記されており、ガイドブック内で不一致（要確認）"
   },
   {
@@ -1613,6 +1700,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.502125,
     "lon": 141.154099,
+    "hasLocation": true,
     "note": "運営：株式会社ケアート／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より"
   },
   {
@@ -1625,6 +1713,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.389351,
     "lon": 141.114746,
+    "hasLocation": true,
     "note": "運営：株式会社ひとしずく／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※電話番号をガイドブックP36/P47で確認・修正（旧：0198-41-3170）"
   },
   {
@@ -1637,6 +1726,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.369099,
     "lon": 141.103851,
+    "hasLocation": true,
     "note": "運営：株式会社宙の里／岩手県指定障害児通所支援事業所台帳（2026年7月時点）より／※電話番号をガイドブックP36で確認・修正（旧：0198-41-6166）"
   },
   {
@@ -1649,6 +1739,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.389393,
     "lon": 141.108551,
+    "hasLocation": true,
     "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
   },
   {
@@ -1661,6 +1752,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.39109,
     "lon": 141.112778,
+    "hasLocation": true,
     "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
   },
   {
@@ -1673,6 +1765,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.39109,
     "lon": 141.112778,
+    "hasLocation": true,
     "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
   },
   {
@@ -1685,6 +1778,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.397579,
     "lon": 141.106354,
+    "hasLocation": true,
     "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
   },
   {
@@ -1697,6 +1791,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.386326,
     "lon": 141.115082,
+    "hasLocation": true,
     "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
   },
   {
@@ -1709,6 +1804,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.397758,
     "lon": 141.105347,
+    "hasLocation": true,
     "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
   },
   {
@@ -1721,6 +1817,7 @@ const DATA = [
     "facebook": "https://www.facebook.com/homenoba/",
     "lat": 39.399956,
     "lon": 141.104858,
+    "hasLocation": true,
     "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
   },
   {
@@ -1733,6 +1830,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.393391,
     "lon": 141.110748,
+    "hasLocation": true,
     "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
   },
   {
@@ -1745,6 +1843,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.389114,
     "lon": 141.134048,
+    "hasLocation": true,
     "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
   },
   {
@@ -1757,6 +1856,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.500217,
     "lon": 141.149384,
+    "hasLocation": true,
     "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
   },
   {
@@ -1769,6 +1869,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.37476,
     "lon": 141.122711,
+    "hasLocation": true,
     "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
   },
   {
@@ -1781,6 +1882,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.500217,
     "lon": 141.149384,
+    "hasLocation": true,
     "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
   },
   {
@@ -1793,6 +1895,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.343815,
     "lon": 141.045074,
+    "hasLocation": true,
     "note": "民間事業者につき非網羅（Web検索で確認できた範囲のみ）"
   },
   {
@@ -1805,6 +1908,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.381271,
     "lon": 141.103058,
+    "hasLocation": true,
     "note": "対象：ひとり親世帯・多子世帯（0歳〜高校生）／毎月1回17:00-19:00・LINE事前予約制"
   },
   {
@@ -1817,6 +1921,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.386425,
     "lon": 141.102097,
+    "hasLocation": true,
     "note": "第1・3水曜15:30-19:00／はなまきこどもネットワーク会員名簿：担当 阿部・岡田"
   },
   {
@@ -1829,6 +1934,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.384319,
     "lon": 141.224472,
+    "hasLocation": true,
     "note": "Instagram: @min_goha"
   },
   {
@@ -1841,6 +1947,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.360508,
     "lon": 141.038818,
+    "hasLocation": true,
     "note": "担当：畠山奈津子"
   },
   {
@@ -1853,6 +1960,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.344761,
     "lon": 141.042969,
+    "hasLocation": true,
     "note": "在宅支援・居場所・交流会等の複合活動（重い障がいのある方の家族支援が中心）／はなまきこどもネットワーク参加団体"
   },
   {
@@ -1865,6 +1973,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.37669,
     "lon": 141.117081,
+    "hasLocation": true,
     "note": "団体：特定非営利活動法人はなのば／代表：多田真弓"
   },
   {
@@ -1877,6 +1986,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.387718,
     "lon": 141.114792,
+    "hasLocation": true,
     "note": "担当：斎藤"
   },
   {
@@ -1889,6 +1999,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.410484,
     "lon": 141.118057,
+    "hasLocation": true,
     "note": "担当：清水克憲"
   },
   {
@@ -1901,6 +2012,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.386868,
     "lon": 141.140472,
+    "hasLocation": true,
     "note": "担当：及川晃史"
   },
   {
@@ -1913,6 +2025,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.390549,
     "lon": 141.098312,
+    "hasLocation": true,
     "note": "施設種別：保育園（公立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -1925,6 +2038,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.423512,
     "lon": 141.11644,
+    "hasLocation": true,
     "note": "施設種別：保育園（公立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -1937,6 +2051,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.389278,
     "lon": 141.052597,
+    "hasLocation": true,
     "note": "施設種別：保育園（公立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -1949,6 +2064,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.37487,
     "lon": 141.043182,
+    "hasLocation": true,
     "note": "施設種別：保育園（公立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -1961,6 +2077,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.472183,
     "lon": 141.285965,
+    "hasLocation": true,
     "note": "施設種別：保育園（公立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -1973,6 +2090,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.416943,
     "lon": 141.230118,
+    "hasLocation": true,
     "note": "施設種別：保育園（公立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -1985,6 +2103,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.371132,
     "lon": 141.208344,
+    "hasLocation": true,
     "note": "施設種別：保育園（公立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -1997,6 +2116,7 @@ const DATA = [
     "facebook": "https://www.facebook.com/megumifukushikai.megumihoikuen/",
     "lat": 39.358719,
     "lon": 141.108337,
+    "hasLocation": true,
     "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2009,6 +2129,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.409664,
     "lon": 141.098434,
+    "hasLocation": true,
     "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2021,6 +2142,7 @@ const DATA = [
     "facebook": "https://www.facebook.com/pages/花巻太陽の子保育園/1697328593900776/",
     "lat": 39.402153,
     "lon": 141.101715,
+    "hasLocation": true,
     "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2033,6 +2155,7 @@ const DATA = [
     "facebook": "https://www.facebook.com/pages/花巻太陽の子保育園/1697328593900776/",
     "lat": 39.401058,
     "lon": 141.101379,
+    "hasLocation": true,
     "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2045,6 +2168,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.381908,
     "lon": 141.08667,
+    "hasLocation": true,
     "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2057,6 +2181,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.413036,
     "lon": 141.103775,
+    "hasLocation": true,
     "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2069,6 +2194,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.353226,
     "lon": 141.048294,
+    "hasLocation": true,
     "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2081,6 +2207,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.377785,
     "lon": 141.108902,
+    "hasLocation": true,
     "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より／市公式・運営元サイトとも「みどりの保育園」表記（「家」なし）。住所・電話は完全一致"
   },
   {
@@ -2093,6 +2220,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.390049,
     "lon": 141.121765,
+    "hasLocation": true,
     "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2105,6 +2233,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.38448,
     "lon": 141.122467,
+    "hasLocation": true,
     "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2117,6 +2246,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.472279,
     "lon": 141.150543,
+    "hasLocation": true,
     "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2129,6 +2259,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.446381,
     "lon": 141.185669,
+    "hasLocation": true,
     "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2141,6 +2272,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.486206,
     "lon": 141.17778,
+    "hasLocation": true,
     "note": "施設種別：保育園（私立）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2153,6 +2285,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.370293,
     "lon": 141.103409,
+    "hasLocation": true,
     "note": "施設種別：保育園（国立病院機構花巻病院）／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より／従業員の子と地域の子を対象。定員6名"
   },
   {
@@ -2165,6 +2298,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.423512,
     "lon": 141.11644,
+    "hasLocation": true,
     "note": "施設種別：保育園／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2177,6 +2311,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.399342,
     "lon": 141.09491,
+    "hasLocation": true,
     "note": "施設種別：保育園／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2189,6 +2324,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.385807,
     "lon": 141.141663,
+    "hasLocation": true,
     "note": "施設種別：保育園／花巻市子育てガイドブック（令和8年6月改訂版）P15・P16・P18-19より"
   },
   {
@@ -2201,6 +2337,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.389538,
     "lon": 141.118301,
+    "hasLocation": true,
     "note": "施設種別：小規模保育施設（0〜2歳児対象）／花巻市子育てガイドブック（令和8年6月改訂版）P15より"
   },
   {
@@ -2213,6 +2350,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.389618,
     "lon": 141.104462,
+    "hasLocation": true,
     "note": "施設種別：小規模保育施設（0〜2歳児対象）／花巻市子育てガイドブック（令和8年6月改訂版）P15より"
   },
   {
@@ -2225,6 +2363,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.404881,
     "lon": 141.131805,
+    "hasLocation": true,
     "note": "施設種別：小規模保育施設（0〜2歳児対象）／花巻市子育てガイドブック（令和8年6月改訂版）P15より"
   },
   {
@@ -2237,6 +2376,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.381271,
     "lon": 141.103058,
+    "hasLocation": true,
     "note": "施設種別：小規模保育施設（0〜2歳児対象）／花巻市子育てガイドブック（令和8年6月改訂版）P15より"
   },
   {
@@ -2249,6 +2389,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.410908,
     "lon": 141.099945,
+    "hasLocation": true,
     "note": "施設種別：小規模保育施設（0〜2歳児対象）／花巻市子育てガイドブック（令和8年6月改訂版）P15より"
   },
   {
@@ -2261,6 +2402,7 @@ const DATA = [
     "facebook": "https://www.facebook.com/jyoseitokonomirai/",
     "lat": 39.423512,
     "lon": 141.11644,
+    "hasLocation": true,
     "note": "施設種別：小規模保育施設（0〜2歳児対象）／花巻市子育てガイドブック（令和8年6月改訂版）P15より"
   },
   {
@@ -2273,6 +2415,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.389927,
     "lon": 141.11937,
+    "hasLocation": true,
     "note": "施設種別：幼稚園／定員140／保育時間8:30-13:30／送迎バスなし"
   },
   {
@@ -2285,6 +2428,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.395813,
     "lon": 141.113922,
+    "hasLocation": true,
     "note": "施設種別：幼稚園／定員320／保育時間9:00-13:30／送迎バスあり"
   },
   {
@@ -2297,6 +2441,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.401463,
     "lon": 141.037643,
+    "hasLocation": true,
     "note": "施設種別：幼稚園／定員15／保育時間9:00-13:30／送迎バスあり"
   },
   {
@@ -2309,6 +2454,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.366535,
     "lon": 141.101501,
+    "hasLocation": true,
     "note": "施設種別：幼稚園／定員45／保育時間8:30-13:30／送迎バスあり"
   },
   {
@@ -2321,6 +2467,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.349827,
     "lon": 141.049759,
+    "hasLocation": true,
     "note": "施設種別：幼稚園／定員45／保育時間9:00-13:00／送迎バスあり"
   },
   {
@@ -2333,6 +2480,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.37722,
     "lon": 141.100601,
+    "hasLocation": true,
     "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より／運営元サイトでは「縢乃こども園」表記だが住所完全一致（表記ゆれの可能性）"
   },
   {
@@ -2345,6 +2493,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.385807,
     "lon": 141.141663,
+    "hasLocation": true,
     "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
   },
   {
@@ -2357,6 +2506,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.380623,
     "lon": 141.108292,
+    "hasLocation": true,
     "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
   },
   {
@@ -2369,6 +2519,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.407524,
     "lon": 141.179779,
+    "hasLocation": true,
     "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
   },
   {
@@ -2381,6 +2532,7 @@ const DATA = [
     "facebook": "https://www.facebook.com/nijiirokodomoen/",
     "lat": 39.413666,
     "lon": 141.12941,
+    "hasLocation": true,
     "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
   },
   {
@@ -2393,6 +2545,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.369694,
     "lon": 141.134995,
+    "hasLocation": true,
     "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
   },
   {
@@ -2405,6 +2558,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.442417,
     "lon": 141.129791,
+    "hasLocation": true,
     "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
   },
   {
@@ -2417,6 +2571,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.382633,
     "lon": 141.115295,
+    "hasLocation": true,
     "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
   },
   {
@@ -2429,6 +2584,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.374908,
     "lon": 141.110519,
+    "hasLocation": true,
     "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
   },
   {
@@ -2441,6 +2597,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.375381,
     "lon": 141.119293,
+    "hasLocation": true,
     "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
   },
   {
@@ -2453,6 +2610,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.389584,
     "lon": 141.106567,
+    "hasLocation": true,
     "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
   },
   {
@@ -2465,6 +2623,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.442898,
     "lon": 141.083862,
+    "hasLocation": true,
     "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
   },
   {
@@ -2477,6 +2636,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.500217,
     "lon": 141.149384,
+    "hasLocation": true,
     "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
   },
   {
@@ -2489,7 +2649,21 @@ const DATA = [
     "facebook": "",
     "lat": 39.388664,
     "lon": 141.225204,
+    "hasLocation": true,
     "note": "施設種別：認定こども園／花巻市子育てガイドブック（令和8年6月改訂版）P18-19より"
+  },
+  {
+    "category": "産前・産後サポート",
+    "name": "出張助産院 ままのわ助産院",
+    "address": "住所非公表（活動場所：中央みのり幼稚園ほか）",
+    "phone": "LINE ID：@730kejvv",
+    "url": "",
+    "instagram": "https://www.instagram.com/hanamakimamanowa/",
+    "facebook": "",
+    "lat": null,
+    "lon": null,
+    "hasLocation": false,
+    "note": "「にこにこサロン」（毎月最終月曜14:00-16:00・中央みのり幼稚園）を運営。ガイドブックP5-6に施設独自の住所記載なし。地図上への配置は不可（座標なし）"
   },
   {
     "category": "産前・産後サポート",
@@ -2501,6 +2675,7 @@ const DATA = [
     "facebook": "https://www.facebook.com/manmaru.iwate/",
     "lat": 39.400135,
     "lon": 141.114395,
+    "hasLocation": true,
     "note": "デイサービス（全日型・半日型）・訪問相談を実施。「花巻まんまるサロン／体操」（花北振興センター）の運営元でもある／ガイドブックP5-6・P47より"
   },
   {
@@ -2513,6 +2688,7 @@ const DATA = [
     "facebook": "",
     "lat": 39.389648,
     "lon": 141.117569,
+    "hasLocation": true,
     "note": "病気回復期のお子さんを一時的に保育"
   },
   {
@@ -2525,19 +2701,8 @@ const DATA = [
     "facebook": "",
     "lat": 39.390011,
     "lon": 141.115479,
+    "hasLocation": true,
     "note": "開所：月〜金9:00-16:30（祝日休）／子育ての相互援助活動のあっせん／ガイドブックP22"
-  }
-];
-const NO_LOCATION_DATA = [
-  {
-    "category": "産前・産後サポート",
-    "name": "出張助産院 ままのわ助産院",
-    "address": "住所非公表（活動場所：中央みのり幼稚園ほか）",
-    "phone": "LINE ID：@730kejvv",
-    "url": "",
-    "instagram": "https://www.instagram.com/hanamakimamanowa/",
-    "facebook": "",
-    "note": "「にこにこサロン」（毎月最終月曜14:00-16:00・中央みのり幼稚園）を運営。ガイドブックP5-6に施設独自の住所記載なし。地図上への配置は不可（座標なし）"
   },
   {
     "category": "子育て支援サービス",
@@ -2547,6 +2712,9 @@ const NO_LOCATION_DATA = [
     "url": "https://reserva.be/en_tudoiba/about",
     "instagram": "https://www.instagram.com/en_tudoiba/",
     "facebook": "",
+    "lat": null,
+    "lon": null,
+    "hasLocation": false,
     "note": "活動：親子の居場所づくり、各種イベント開催／担当：高橋／Instagram：en_tudoiba／固定住所がないため緯度経度なし"
   },
   {
@@ -2557,6 +2725,9 @@ const NO_LOCATION_DATA = [
     "url": "https://nekkostaff.wixsite.com/nekko",
     "instagram": "https://www.instagram.com/asobiba_nekko/",
     "facebook": "",
+    "lat": null,
+    "lon": null,
+    "hasLocation": false,
     "note": "活動：野山・田んぼ・小川・神社など自然の中での遊び・学び活動／代表：岡田早希／固定住所がないため緯度経度なし"
   },
   {
@@ -2567,15 +2738,19 @@ const NO_LOCATION_DATA = [
     "url": "",
     "instagram": "https://www.instagram.com/oniccoasobikai/",
     "facebook": "",
+    "lat": null,
+    "lon": null,
+    "hasLocation": false,
     "note": "活動：子ども向け遊びの会／詳細はInstagram参照／固定住所がないため緯度経度なし"
   }
 ];
 
 // 同一座標（住所を町丁目レベルまでしか特定できない施設が複数あるため）に立つピンを
-// 少しだけ円状にずらして、重なりが分かるようにする
+// 少しだけ円状にずらして、重なりが分かるようにする（拠点を持たない＝lat/lonがない
+// 施設はそもそも対象外）
 function spreadOverlaps(data) {
   const groups = {};
-  data.forEach(d => {
+  data.filter(d => d.hasLocation).forEach(d => {
     const key = d.lat.toFixed(6) + ',' + d.lon.toFixed(6);
     (groups[key] = groups[key] || []).push(d);
   });
@@ -2676,6 +2851,7 @@ ALL_CATS.forEach(cat => {
 const allMarkers = [];
 
 DATA.forEach(d => {
+  if (!d.hasLocation) return; // 拠点を持たない施設・イベントには地図ピンを作らない
   const cfg = CATEGORY_CONFIG[d.category] || { color: '#555', icon: '\ud83d\udccd' };
   const marker = L.marker([d.lat, d.lon], { icon: makeIcon(cfg.color, cfg.icon, cfg.weight, cfg.scale) });
   const gmapQuery = `${d.name} ${d.address}`.replace(/\u3012\d{3}-?\d{4}\s*/, '');
@@ -2699,7 +2875,8 @@ DATA.forEach(d => {
   d._marker = marker;
 });
 
-// facility list（チェックが入っているカテゴリのみ表示）
+// facility list（チェックが入っているカテゴリのみ表示。拠点を持たない施設・イベントも
+// 他の施設と同じ一覧に混在させる。地図ピンがないものはクリックで詳細をその場に展開する）
 const facListEl = document.getElementById('fac-list');
 function renderFacList() {
   facListEl.innerHTML = '';
@@ -2714,39 +2891,35 @@ function renderFacList() {
     items.forEach(d => {
       const item = document.createElement('div');
       item.className = 'fac-item';
-      item.innerHTML = `<div class="name">${d.name}</div><div class="addr">${shortAddress(d.address)}</div>`;
-      item.addEventListener('click', () => {
-        map.setView([d.lat, d.lon], 16);
-        d._marker.openPopup();
-      });
+      const noLocTag = d.hasLocation ? '' : '<span class="noloc-tag">拠点なし</span>';
+      item.innerHTML = `<div class="name">${d.name}${noLocTag}</div><div class="addr">${shortAddress(d.address)}</div>`;
+
+      if (d.hasLocation) {
+        item.addEventListener('click', () => {
+          map.setView([d.lat, d.lon], 16);
+          d._marker.openPopup();
+        });
+      } else {
+        // 拠点がなく地図ピンを持たない施設・イベントは、クリックで詳細をその場に展開する
+        const detail = document.createElement('div');
+        detail.className = 'fac-detail';
+        detail.style.display = 'none';
+        detail.innerHTML = `
+          ${d.phone ? `<div class="row">\ud83d\udcde <a href="tel:${d.phone.replace(/[^0-9]/g,'')}">${d.phone}</a></div>` : ''}
+          ${d.url ? `<div class="row">\ud83d\udd17 <a href="${d.url}" target="_blank" rel="noopener">${d.url}</a></div>` : ''}
+          ${d.instagram ? `<div class="row">\ud83d\udcf7 <a href="${d.instagram}" target="_blank" rel="noopener">Instagram</a></div>` : ''}
+          ${d.facebook ? `<div class="row">\ud83d\udcd8 <a href="${d.facebook}" target="_blank" rel="noopener">Facebook</a></div>` : ''}
+          ${d.note ? `<div class="note">${d.note}</div>` : ''}
+        `;
+        item.appendChild(detail);
+        item.addEventListener('click', () => {
+          detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+        });
+      }
       facListEl.appendChild(item);
     });
   });
 }
-
-// 拠点を持たない団体・イベント（緯度経度がなく地図にピンを立てられないもの）を
-// サイドバー下部に常時表示する専用リスト。凡例のON/OFFには連動しない。
-const nolocListEl = document.getElementById('noloc-list');
-function renderNoLocList() {
-  nolocListEl.innerHTML = '';
-  NO_LOCATION_DATA.forEach(d => {
-    const cfg = CATEGORY_CONFIG[d.category] || { color: '#555' };
-    const item = document.createElement('div');
-    item.className = 'noloc-item';
-    item.innerHTML = `
-      <div class="name">${d.name}</div>
-      <span class="cat-badge" style="background:${cfg.color}">${d.category}</span>
-      ${d.address ? `<div class="row">\ud83d\udccd ${d.address}</div>` : ''}
-      ${d.phone ? `<div class="row">\ud83d\udcde <a href="tel:${d.phone.replace(/[^0-9]/g,'')}">${d.phone}</a></div>` : ''}
-      ${d.url ? `<div class="row">\ud83d\udd17 <a href="${d.url}" target="_blank" rel="noopener">${d.url}</a></div>` : ''}
-      ${d.instagram ? `<div class="row">\ud83d\udcf7 <a href="${d.instagram}" target="_blank" rel="noopener">Instagram</a></div>` : ''}
-      ${d.facebook ? `<div class="row">\ud83d\udcd8 <a href="${d.facebook}" target="_blank" rel="noopener">Facebook</a></div>` : ''}
-      ${d.note ? `<div class="note">${d.note}</div>` : ''}
-    `;
-    nolocListEl.appendChild(item);
-  });
-}
-renderNoLocList();
 
 // legend（プルダウン式：大カテゴリのヘッダーをクリックすると、その中の小カテゴリ行が開閉する。
 // 小カテゴリ行はアクセシブルなカスタムトグル行。四角チェックボックスは使わず、色付きドットの塗り／枠だけで状態を示す）
