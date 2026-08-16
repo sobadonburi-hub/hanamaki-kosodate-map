@@ -173,6 +173,46 @@
   .fac-item .name { font-weight: 400; }
   .fac-item .addr { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
 
+  #noloc-section {
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  #noloc-section h2 {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 4px;
+    padding: 0 6px;
+  }
+  #noloc-section .noloc-desc {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+    padding: 0 6px;
+  }
+  .noloc-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin: 0 2px 8px;
+    font-size: 12.5px;
+  }
+  .noloc-item .name { font-weight: 500; font-size: 13px; margin-bottom: 3px; }
+  .noloc-item .cat-badge {
+    display: inline-block;
+    font-size: 10.5px;
+    color: #fff;
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-bottom: 5px;
+  }
+  .noloc-item .row { color: var(--text-secondary); margin: 2px 0; }
+  .noloc-item .row a { color: #2a78d6; }
+  .noloc-item .note { color: var(--text-muted); font-size: 11px; margin-top: 4px; }
+
   #map { flex: 1; }
 
   .popup-title { font-weight: 500; font-size: 14px; margin-bottom: 4px; }
@@ -199,7 +239,7 @@
   <header>
     <img class="logo" src="logo-header.png" alt="はなまき子育てマップ ロゴ">
     <h1>はなまき子育てマップ</h1>
-    <span class="badge">189件掲載</span>
+    <span class="badge">193件掲載</span>
     <span class="note">岩手県花巻市</span>
     <a class="feedback-link" href="https://forms.gle/AyixaH82UneZoMD59" target="_blank" rel="noopener">情報提供・修正はこちら</a>
   </header>
@@ -207,6 +247,11 @@
     <div id="sidebar">
       <div id="legend"></div>
       <div class="fac-list" id="fac-list"></div>
+      <div id="noloc-section">
+        <h2>拠点を持たない団体・イベント</h2>
+        <p class="noloc-desc">住所が固定されていないため、地図上にはピンを表示していません。活動内容やSNSはこちらをご覧ください。</p>
+        <div id="noloc-list"></div>
+      </div>
     </div>
     <div id="map"></div>
   </div>
@@ -2483,6 +2528,48 @@ const DATA = [
     "note": "開所：月〜金9:00-16:30（祝日休）／子育ての相互援助活動のあっせん／ガイドブックP22"
   }
 ];
+const NO_LOCATION_DATA = [
+  {
+    "category": "産前・産後サポート",
+    "name": "出張助産院 ままのわ助産院",
+    "address": "住所非公表（活動場所：中央みのり幼稚園ほか）",
+    "phone": "LINE ID：@730kejvv",
+    "url": "",
+    "instagram": "https://www.instagram.com/hanamakimamanowa/",
+    "facebook": "",
+    "note": "「にこにこサロン」（毎月最終月曜14:00-16:00・中央みのり幼稚園）を運営。ガイドブックP5-6に施設独自の住所記載なし。地図上への配置は不可（座標なし）"
+  },
+  {
+    "category": "子育て支援サービス",
+    "name": "親と子の集い場 縁",
+    "address": "市内各地（固定拠点なし・巡回型）",
+    "phone": "",
+    "url": "https://reserva.be/en_tudoiba/about",
+    "instagram": "https://www.instagram.com/en_tudoiba/",
+    "facebook": "",
+    "note": "活動：親子の居場所づくり、各種イベント開催／担当：高橋／Instagram：en_tudoiba／固定住所がないため緯度経度なし"
+  },
+  {
+    "category": "あそび",
+    "name": "あそびばnekko",
+    "address": "花巻市東和町エリア（固定拠点なし・巡回型）",
+    "phone": "",
+    "url": "https://nekkostaff.wixsite.com/nekko",
+    "instagram": "https://www.instagram.com/asobiba_nekko/",
+    "facebook": "",
+    "note": "活動：野山・田んぼ・小川・神社など自然の中での遊び・学び活動／代表：岡田早希／固定住所がないため緯度経度なし"
+  },
+  {
+    "category": "あそび",
+    "name": "おにっこ遊びぱーく",
+    "address": "市内各地（固定拠点なし・巡回型）",
+    "phone": "",
+    "url": "",
+    "instagram": "https://www.instagram.com/oniccoasobikai/",
+    "facebook": "",
+    "note": "活動：子ども向け遊びの会／詳細はInstagram参照／固定住所がないため緯度経度なし"
+  }
+];
 
 // 同一座標（住所を町丁目レベルまでしか特定できない施設が複数あるため）に立つピンを
 // 少しだけ円状にずらして、重なりが分かるようにする
@@ -2636,6 +2723,30 @@ function renderFacList() {
     });
   });
 }
+
+// 拠点を持たない団体・イベント（緯度経度がなく地図にピンを立てられないもの）を
+// サイドバー下部に常時表示する専用リスト。凡例のON/OFFには連動しない。
+const nolocListEl = document.getElementById('noloc-list');
+function renderNoLocList() {
+  nolocListEl.innerHTML = '';
+  NO_LOCATION_DATA.forEach(d => {
+    const cfg = CATEGORY_CONFIG[d.category] || { color: '#555' };
+    const item = document.createElement('div');
+    item.className = 'noloc-item';
+    item.innerHTML = `
+      <div class="name">${d.name}</div>
+      <span class="cat-badge" style="background:${cfg.color}">${d.category}</span>
+      ${d.address ? `<div class="row">\ud83d\udccd ${d.address}</div>` : ''}
+      ${d.phone ? `<div class="row">\ud83d\udcde <a href="tel:${d.phone.replace(/[^0-9]/g,'')}">${d.phone}</a></div>` : ''}
+      ${d.url ? `<div class="row">\ud83d\udd17 <a href="${d.url}" target="_blank" rel="noopener">${d.url}</a></div>` : ''}
+      ${d.instagram ? `<div class="row">\ud83d\udcf7 <a href="${d.instagram}" target="_blank" rel="noopener">Instagram</a></div>` : ''}
+      ${d.facebook ? `<div class="row">\ud83d\udcd8 <a href="${d.facebook}" target="_blank" rel="noopener">Facebook</a></div>` : ''}
+      ${d.note ? `<div class="note">${d.note}</div>` : ''}
+    `;
+    nolocListEl.appendChild(item);
+  });
+}
+renderNoLocList();
 
 // legend（プルダウン式：大カテゴリのヘッダーをクリックすると、その中の小カテゴリ行が開閉する。
 // 小カテゴリ行はアクセシブルなカスタムトグル行。四角チェックボックスは使わず、色付きドットの塗り／枠だけで状態を示す）
