@@ -78,6 +78,8 @@
     overflow-y: auto;
     padding: 14px;
   }
+  #sheet-handle { display: none; }
+  #sheet-feedback { display: none; }
 
   #sidebar-meta {
     margin-top: 14px;
@@ -97,8 +99,6 @@
     border-radius: 999px;
     padding: 3px 10px;
   }
-
-  #mobile-feedback-bar { display: none; }
 
   .legend-group {
     margin-bottom: 8px;
@@ -226,37 +226,94 @@
     header h1 { font-size: 14px; }
     header .feedback-link { display: none; }
 
-    /* スマホでもPCと同じくサイドバーとマップを常時並べて表示する。
-       画面が狭い分、サイドバー幅はぎりぎりまで切り詰める */
-    #sidebar {
-      width: 132px;
-      padding: 10px 6px;
-    }
-    .legend-group-title { font-size: 12px; }
-    .legend-label { font-size: 12.5px; }
-    .legend-group-count, .legend-count { font-size: 11px; }
-    .legend-row { padding: 6px 4px 6px 14px; gap: 6px; }
-    .legend-group-header { padding: 7px 4px; gap: 5px; }
-    .fac-item { font-size: 12px; padding: 7px 4px; }
-    .fac-item .addr { font-size: 11px; }
+    #main { position: relative; overflow: hidden; }
+    #map { position: absolute; inset: 0; }
 
-    #mobile-feedback-bar {
+    /* ボトムシート：普段は地図を全画面表示し、下から少しだけ覗くハンドルを
+       指で上に引き上げるとカテゴリ一覧・施設一覧が展開する（Google Maps/Airbnb方式） */
+    #sidebar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      top: auto;
+      height: 85vh;
+      width: auto;
+      max-width: none;
+      background: var(--surface-2);
+      border-right: none;
+      border-top: 1px solid var(--border);
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -6px 24px rgba(0,0,0,0.18);
+      z-index: 2000;
+      padding: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(calc(85vh - 64px));
+      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    #sidebar.dragging { transition: none; }
+    #sidebar.sheet-peek { transform: translateY(calc(85vh - 64px)); }
+    #sidebar.sheet-half { transform: translateY(40vh); }
+    #sidebar.sheet-full { transform: translateY(0); }
+
+    #sheet-handle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px 10px;
+      cursor: grab;
+      flex-shrink: 0;
+      touch-action: none;
+    }
+    .sheet-grip {
+      width: 36px;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--border);
+    }
+    .sheet-summary {
+      font-size: 13px;
+      color: var(--text-secondary);
+      width: 100%;
+      text-align: center;
+    }
+
+    #sheet-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 14px 16px;
+    }
+
+    #sidebar-meta { margin-top: 10px; padding-top: 10px; }
+
+    .legend-row { padding: 10px 8px 10px 22px; gap: 10px; }
+    .legend-group-header { padding: 12px 8px; gap: 8px; }
+    .legend-group-title { font-size: 14px; }
+    .legend-label { font-size: 14px; }
+    .legend-group-count, .legend-count { font-size: 12px; }
+    .fac-item { font-size: 14px; padding: 10px 6px; }
+    .fac-item .addr { font-size: 12px; }
+
+    #sheet-feedback {
       display: flex;
       justify-content: center;
-      padding: 10px;
-      border-top: 1px solid var(--border);
-      background: var(--surface-2);
+      padding: 16px 6px 8px;
     }
-    #mobile-feedback-bar .feedback-link {
+    #sheet-feedback .feedback-link {
       font-size: 13px;
       color: #fff;
       background: #1D4ED8;
       border-radius: 999px;
-      padding: 7px 20px;
+      padding: 8px 22px;
       text-decoration: none;
       white-space: nowrap;
     }
-    #mobile-feedback-bar .feedback-link:hover { background: #1642B0; }
+    #sheet-feedback .feedback-link:hover { background: #1642B0; }
   }
 </style>
 </head>
@@ -269,17 +326,23 @@
   </header>
   <div id="main">
     <div id="sidebar">
-      <div id="legend"></div>
-      <div id="sidebar-meta">
-        <span class="note">岩手県花巻市</span>
-        <span class="badge">193件掲載</span>
+      <div id="sheet-handle">
+        <span class="sheet-grip"></span>
+        <span class="sheet-summary" id="sheet-summary">上にスワイプしてカテゴリを選択</span>
       </div>
-      <div class="fac-list" id="fac-list"></div>
+      <div id="sheet-scroll">
+        <div id="legend"></div>
+        <div id="sidebar-meta">
+          <span class="note">岩手県花巻市</span>
+          <span class="badge">193件掲載</span>
+        </div>
+        <div class="fac-list" id="fac-list"></div>
+        <div id="sheet-feedback">
+          <a class="feedback-link" href="https://forms.gle/AyixaH82UneZoMD59" target="_blank" rel="noopener">情報提供・修正はこちら</a>
+        </div>
+      </div>
     </div>
     <div id="map"></div>
-  </div>
-  <div id="mobile-feedback-bar">
-    <a class="feedback-link" href="https://forms.gle/AyixaH82UneZoMD59" target="_blank" rel="noopener">情報提供・修正はこちら</a>
   </div>
 </div>
 
@@ -2883,15 +2946,32 @@ function shortAddress(address) {
   return m ? m[0] : address;
 }
 
-const map = L.map('map', { scrollWheelZoom: true }).setView([39.40, 141.13], 11);
+const ALL_CATS = CATEGORY_GROUPS.flatMap(g => g.cats);
+
+// URLのクエリパラメータから前回の状態（選択中カテゴリ・地図の表示位置）を復元する。
+// スマホでタブがメモリ節約のため再読み込みされ、選択が0に戻ってしまう問題への対策として、
+// 選択カテゴリと地図の表示位置をURLに保存し、次回アクセス時に復元する。
+const urlParams = new URLSearchParams(location.search);
+const restoredCatsRaw = urlParams.get('cats');
+const restoredCatsList = restoredCatsRaw
+  ? restoredCatsRaw.split(',').filter(c => ALL_CATS.includes(c))
+  : [];
+const restoredLat = parseFloat(urlParams.get('lat'));
+const restoredLng = parseFloat(urlParams.get('lng'));
+const restoredZoom = parseFloat(urlParams.get('z'));
+const hasRestoredView = !isNaN(restoredLat) && !isNaN(restoredLng) && !isNaN(restoredZoom);
+
+const map = L.map('map', { scrollWheelZoom: true }).setView(
+  hasRestoredView ? [restoredLat, restoredLng] : [39.40, 141.13],
+  hasRestoredView ? restoredZoom : 11
+);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
-const ALL_CATS = CATEGORY_GROUPS.flatMap(g => g.cats);
-// 初期状態はすべてOFF（色のない状態）から始める
+// 初期状態はすべてOFF（色のない状態）から始まり、URLに保存された状態があれば後で復元する
 const activeCats = new Set();
 
 const layerGroups = {};
@@ -2949,6 +3029,7 @@ function renderFacList() {
         item.addEventListener('click', () => {
           map.setView([d.lat, d.lon], 16);
           d._marker.openPopup();
+          if (isMobileViewport()) setSheetState('sheet-peek');
         });
       } else {
         // 拠点がなく地図ピンを持たない施設・イベントは、クリックで詳細をその場に展開する
@@ -2975,6 +3056,7 @@ function renderFacList() {
 // legend（プルダウン式：大カテゴリのヘッダーをクリックすると、その中の小カテゴリ行が開閉する。
 // 小カテゴリ行はアクセシブルなカスタムトグル行。四角チェックボックスは使わず、色付きドットの塗り／枠だけで状態を示す）
 const legendEl = document.getElementById('legend');
+const catRowMap = {};
 function toggleCategory(cat, row) {
   const nowChecked = row.getAttribute('aria-checked') !== 'true';
   row.setAttribute('aria-checked', String(nowChecked));
@@ -2986,6 +3068,8 @@ function toggleCategory(cat, row) {
     activeCats.delete(cat);
   }
   renderFacList();
+  updateSheetSummary();
+  syncStateToURL();
 }
 
 function toggleGroup(groupEl) {
@@ -3056,6 +3140,7 @@ CATEGORY_GROUPS.forEach((group, idx) => {
     row.appendChild(labelSpan);
     row.appendChild(countSpan2);
     rowsEl.appendChild(row);
+    catRowMap[cat] = row;
 
     // 行全体をクリック（タップ）するとオン/オフが切り替わる。
     // タッチ端末はhoverイベントが発生しないため、行全体をタップ対象にする。
@@ -3094,9 +3179,139 @@ CATEGORY_GROUPS.forEach((group, idx) => {
   }
 });
 
+// 地図の表示位置もURLに保存し、次回アクセス時に復元できるようにする
+function syncStateToURL() {
+  const params = new URLSearchParams();
+  if (activeCats.size > 0) {
+    params.set('cats', Array.from(activeCats).join(','));
+  }
+  const c = map.getCenter();
+  params.set('lat', c.lat.toFixed(5));
+  params.set('lng', c.lng.toFixed(5));
+  params.set('z', map.getZoom());
+  const qs = params.toString();
+  const newUrl = location.pathname + (qs ? '?' + qs : '') + location.hash;
+  history.replaceState(null, '', newUrl);
+}
+
+let moveendTimer = null;
+map.on('moveend', () => {
+  clearTimeout(moveendTimer);
+  moveendTimer = setTimeout(syncStateToURL, 300);
+});
+
+// ボトムシート（スマホ用）：ハンドルをドラッグ／タップして peek（覗く）・half（半分）・
+// full（全開）の3段階を切り替える。Google Maps / Airbnb のボトムシートと同じ操作感。
+function isMobileViewport() {
+  return window.matchMedia('(max-width: 720px)').matches;
+}
+
+const sidebarEl = document.getElementById('sidebar');
+const sheetHandle = document.getElementById('sheet-handle');
+const sheetSummaryEl = document.getElementById('sheet-summary');
+const SHEET_STATES = ['sheet-peek', 'sheet-half', 'sheet-full'];
+let sheetState = 'sheet-peek';
+
+function sheetPxForState(state) {
+  const vh = window.innerHeight;
+  const sheetH = vh * 0.85;
+  if (state === 'sheet-peek') return sheetH - 64;
+  if (state === 'sheet-half') return sheetH - vh * 0.45;
+  return 0;
+}
+
+function setSheetState(state) {
+  sheetState = state;
+  SHEET_STATES.forEach(s => sidebarEl.classList.remove(s));
+  sidebarEl.classList.add(state);
+  sidebarEl.style.transform = '';
+}
+
+function updateSheetSummary() {
+  if (!sheetSummaryEl) return;
+  sheetSummaryEl.textContent = activeCats.size > 0
+    ? `${activeCats.size}件のカテゴリを表示中（タップで詳細）`
+    : '上にスワイプしてカテゴリを選択';
+}
+updateSheetSummary();
+
+if (sidebarEl && sheetHandle) {
+  setSheetState('sheet-peek');
+
+  let dragging = false;
+  let dragStartY = 0;
+  let dragStartPx = 0;
+  let lastPx = 0;
+
+  sheetHandle.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    dragStartY = e.clientY;
+    dragStartPx = sheetPxForState(sheetState);
+    lastPx = dragStartPx;
+    sidebarEl.classList.add('dragging');
+    try { sheetHandle.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+
+  sheetHandle.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dy = e.clientY - dragStartY;
+    const sheetH = window.innerHeight * 0.85;
+    let next = dragStartPx + dy;
+    next = Math.max(0, Math.min(sheetH, next));
+    lastPx = next;
+    sidebarEl.style.transform = `translateY(${next}px)`;
+  });
+
+  function endSheetDrag(e) {
+    if (!dragging) return;
+    dragging = false;
+    sidebarEl.classList.remove('dragging');
+    const dy = (typeof e.clientY === 'number' ? e.clientY : dragStartY) - dragStartY;
+
+    if (Math.abs(dy) < 6) {
+      // ほぼ動いていない場合はタップとみなし、次の状態へ順送りする
+      const idx = SHEET_STATES.indexOf(sheetState);
+      const next = idx >= SHEET_STATES.length - 1 ? 'sheet-peek' : SHEET_STATES[idx + 1];
+      setSheetState(next);
+      return;
+    }
+
+    // 一番近いスナップ位置（peek / half / full）を選ぶ
+    let bestState = sheetState;
+    let bestDist = Infinity;
+    SHEET_STATES.forEach(state => {
+      const dist = Math.abs(lastPx - sheetPxForState(state));
+      if (dist < bestDist) { bestDist = dist; bestState = state; }
+    });
+    setSheetState(bestState);
+  }
+
+  sheetHandle.addEventListener('pointerup', endSheetDrag);
+  sheetHandle.addEventListener('pointercancel', endSheetDrag);
+}
+
+map.on('movestart', () => {
+  if (isMobileViewport() && sheetState !== 'sheet-peek') {
+    setSheetState('sheet-peek');
+  }
+});
+
+// URLに保存されていたカテゴリ選択状態を復元する
+restoredCatsList.forEach(cat => {
+  const row = catRowMap[cat];
+  if (!row) return;
+  const groupEl = row.closest('.legend-group');
+  if (groupEl) {
+    groupEl.classList.add('expanded');
+    const header = groupEl.querySelector('.legend-group-header');
+    if (header) header.setAttribute('aria-expanded', 'true');
+  }
+  toggleCategory(cat, row);
+});
+
 renderFacList();
 
-if (allMarkers.length > 0) {
+if (!hasRestoredView && allMarkers.length > 0) {
   const group = L.featureGroup(allMarkers);
   map.fitBounds(group.getBounds().pad(0.2));
 }
