@@ -26,10 +26,17 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
-<!-- サイトタイトル用フォント（ロゴタイプ「はなまき子育てマップ」の書体に近い、丸みのある手書き風ゴシック） -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+<!-- サイトタイトル用フォント（Adobe Fonts / DNP秀英角ゴシック銀 StdL） -->
+<script>
+  (function(d) {
+    var config = {
+      kitId: 'rpy2spv',
+      scriptTimeout: 3000,
+      async: true
+    },
+    h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://use.typekit.net/'+config.kitId+'.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{Typekit.load(config)}catch(e){}};s.parentNode.insertBefore(tk,s)
+  })(document);
+</script>
 <style>
   :root {
     color-scheme: light;
@@ -61,8 +68,10 @@
   }
   header .logo { height: 32px; width: auto; display: block; }
   header h1 {
-    font-family: 'Zen Maru Gothic', -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
-    font-size: 18px; margin: 0; font-weight: 700;
+    font-family: "dnp-shuei-gothic-gin-std", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 18px; margin: 0;
   }
   header .feedback-link {
     font-size: 12px;
