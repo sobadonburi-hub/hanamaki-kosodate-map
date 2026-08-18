@@ -354,7 +354,7 @@
         <div id="legend"></div>
         <div id="sidebar-meta">
           <span class="note">岩手県花巻市</span>
-          <span class="badge">194件掲載</span>
+          <span class="badge">195件掲載</span>
         </div>
         <div class="fac-list" id="fac-list"></div>
         <div id="sheet-feedback">
@@ -2889,6 +2889,19 @@ const DATA = [
     "lon": 141.232254,
     "hasLocation": true,
     "note": "✉️ <a href=\"mailto:wacco2011@yahoo.co.jp\">wacco2011@yahoo.co.jp</a>"
+  },
+  {
+    "category": "特別支援学校",
+    "name": "岩手県立花巻清風支援学校",
+    "address": "〒025-0037 岩手県花巻市太田第27地割207番地4",
+    "phone": "0198-28-2421",
+    "url": "https://www2.iwate-ed.jp/hki-y/",
+    "instagram": "",
+    "facebook": "",
+    "lat": 39.379578,
+    "lon": 141.040344,
+    "hasLocation": true,
+    "note": "県立／知的障がいのある児童生徒を対象（小学部・中学部・高等部を設置）"
   }
 ];
 
@@ -2916,7 +2929,7 @@ spreadOverlaps(DATA);
 
 // カテゴリごとの色（dataviz参照パレットのカテゴリカル配色）とアイコン
 const CATEGORY_GROUPS = [
-  { title: "学校・フリースクール", cats: ["小学校","中学校","フリースクール","高等学校"], borderColor: "#1D4ED8" },
+  { title: "学校・フリースクール", cats: ["小学校","中学校","フリースクール","高等学校","特別支援学校"], borderColor: "#1D4ED8" },
   { title: "未就学児", cats: ["支援センター","保育園","小規模保育","幼稚園","こども園"], borderColor: "#E11D48" },
   { title: "学習・障がい児支援", cats: ["放課後等デイサービス","学習塾","学習支援・居場所"], borderColor: "#5B21B6" },
   { title: "地域施設・居場所", cats: ["図書館","振興センター","学童クラブ"], borderColor: "#D3A50E" },
@@ -2928,6 +2941,7 @@ const CATEGORY_CONFIG = {
   "中学校":     { color: "#0D9488", icon: "中", weight: 400, scale: 0.8 },
   "フリースクール": { color: "#38BDF8", icon: "フ", weight: 400, scale: 0.8 },
   "高等学校":   { color: "#8B5CF6", icon: "高", weight: 400, scale: 0.8 },
+  "特別支援学校": { color: "#0EA5E9", icon: "特", weight: 400, scale: 0.8 },
   "支援センター": { color: "#E11D48", icon: "支", weight: 400, scale: 0.8 },
   "保育園":     { color: "#991B1B", icon: "保", weight: 400, scale: 0.8 },
   "小規模保育": { color: "#FC83C4", icon: "小", weight: 400, scale: 0.8 },
