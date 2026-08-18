@@ -25,6 +25,11 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<!-- サイトタイトル用フォント（ロゴタイプ「はなまき子育てマップ」の書体に近い、丸みのある手書き風ゴシック） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     color-scheme: light;
@@ -54,8 +59,11 @@
     gap: 12px;
     flex-wrap: wrap;
   }
-  header .logo { width: 32px; height: 32px; display: block; }
-  header h1 { font-size: 16px; margin: 0; font-weight: 700; }
+  header .logo { height: 32px; width: auto; display: block; }
+  header h1 {
+    font-family: 'Zen Maru Gothic', -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    font-size: 18px; margin: 0; font-weight: 700;
+  }
   header .feedback-link {
     font-size: 12px;
     color: #fff;
@@ -223,7 +231,7 @@
 
   @media (max-width: 720px) {
     header { padding: 10px 12px; gap: 8px; }
-    header h1 { font-size: 14px; }
+    header h1 { font-size: 15px; }
     header .feedback-link { display: none; }
 
     #main { position: relative; overflow: hidden; }
