@@ -157,6 +157,27 @@
   }
 
   .menu-drawer-body { padding: 16px; }
+
+  .menu-category-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 16px;
+    margin: 0 0 22px;
+    border: none;
+    border-radius: 12px;
+    background: #EAF1FF;
+    cursor: pointer;
+    text-align: left;
+  }
+  .menu-category-btn:hover { background: #DCE9FF; }
+  .menu-category-btn:focus-visible { box-shadow: 0 0 0 2px #1D4ED8; outline: none; }
+  .menu-category-text { display: flex; flex-direction: column; gap: 3px; }
+  .menu-category-label { font-size: 17px; font-weight: 500; color: var(--text-primary); }
+  .menu-category-sub { font-size: 12.5px; color: var(--text-secondary); }
+  .menu-category-arrow { font-size: 26px; color: #1D4ED8; margin-left: 10px; flex-shrink: 0; }
+
   .menu-section { margin-bottom: 20px; }
   .menu-section h2 {
     font-size: 13px;
@@ -499,6 +520,13 @@
     <button type="button" id="menu-close-btn" aria-label="メニューを閉じる">&times;</button>
   </div>
   <div class="menu-drawer-body">
+    <button type="button" id="menu-category-btn" class="menu-category-btn">
+      <span class="menu-category-text">
+        <span class="menu-category-label">カテゴリ</span>
+        <span class="menu-category-sub">表示する施設の種類を選ぶ</span>
+      </span>
+      <span class="menu-category-arrow" aria-hidden="true">&rsaquo;</span>
+    </button>
     <section class="menu-section">
       <h2>このマップについて</h2>
       <p>はなまき子育てマップは、岩手県花巻市の学校・保育園・こども園・図書館など、子育てに関わる施設をひとつの地図にまとめた情報マップです。花巻市で子育てをするご家庭が、お近くの施設を見つけやすくなることを目指して作成・運営しています。</p>
@@ -3603,6 +3631,16 @@ if (menuBtn) {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && menuDrawer.classList.contains('open')) closeMenu();
   });
+
+  // メニュー内の「カテゴリ」：スワイプ操作が分かりにくい人でも、
+  // タップひとつでカテゴリ一覧（ボトムシート全開状態）を開けるようにする
+  const menuCategoryBtn = document.getElementById('menu-category-btn');
+  if (menuCategoryBtn) {
+    menuCategoryBtn.addEventListener('click', () => {
+      closeMenu();
+      setSheetState('sheet-full');
+    });
+  }
 }
 </script>
 </body>
