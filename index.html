@@ -3268,6 +3268,22 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
+// 画面の左右端付近から始まるタッチは、地図のパン操作として先に消費してしまい、
+// ブラウザ／アプリ内ブラウザの「端スワイプで戻る・閉じる」ジェスチャーに
+// 奪われないようにする（overscroll-behavior だけでは防げない環境への保険）
+(function() {
+  const mapEl = document.getElementById('map');
+  if (!mapEl) return;
+  const EDGE_PX = 24;
+  mapEl.addEventListener('touchstart', function(e) {
+    if (e.touches.length !== 1) return;
+    const x = e.touches[0].clientX;
+    if (x < EDGE_PX || x > window.innerWidth - EDGE_PX) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+})();
+
 // 初期状態はすべてOFF（色のない状態）から始まり、URLに保存された状態があれば後で復元する
 const activeCats = new Set();
 
