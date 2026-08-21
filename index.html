@@ -88,6 +88,101 @@
   }
   header .feedback-link:hover { background: #1642B0; }
 
+  .menu-btn {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+  .menu-btn span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--text-primary);
+  }
+
+  #menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 2900;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  #menu-overlay.open { opacity: 1; pointer-events: auto; }
+
+  #menu-drawer {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 82vw;
+    max-width: 320px;
+    background: var(--surface-2);
+    box-shadow: -6px 0 24px rgba(0,0,0,0.18);
+    z-index: 3000;
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  #menu-drawer.open { transform: translateX(0); }
+
+  .menu-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .menu-drawer-title { font-size: 15px; font-weight: 500; color: var(--text-primary); }
+  #menu-close-btn {
+    width: 32px; height: 32px;
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+
+  .menu-drawer-body { padding: 16px; }
+  .menu-section { margin-bottom: 20px; }
+  .menu-section h2 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0 0 8px;
+  }
+  .menu-section p {
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+  .menu-link {
+    display: block;
+    text-align: center;
+    font-size: 13px;
+    color: #fff;
+    background: #1D4ED8;
+    border-radius: 999px;
+    padding: 10px 14px;
+    text-decoration: none;
+    margin-bottom: 20px;
+  }
+  .menu-link:hover { background: #1642B0; }
+
   #main { flex: 1; display: flex; min-height: 0; position: relative; }
 
   #sidebar {
@@ -256,6 +351,7 @@
     header { padding: 10px 12px; gap: 8px; }
     header h1 { font-size: 15px; }
     header .feedback-link { display: none; }
+    .menu-btn { display: flex; margin-left: auto; }
 
     #main { position: relative; overflow: hidden; }
     #map { position: absolute; inset: 0; }
@@ -367,6 +463,9 @@
     <img class="logo" src="logo-header.png" alt="はなまき子育てマップ ロゴ">
     <h1>はなまき子育てマップ</h1>
     <a class="feedback-link" href="https://forms.gle/AyixaH82UneZoMD59" target="_blank" rel="noopener">情報提供・修正はこちら</a>
+    <button type="button" id="menu-btn" class="menu-btn" aria-label="メニューを開く" aria-expanded="false" aria-controls="menu-drawer">
+      <span></span><span></span><span></span>
+    </button>
   </header>
   <div id="main">
     <div id="sidebar">
@@ -390,6 +489,25 @@
       <span class="sheet-grip"></span>
       <span class="sheet-summary" id="sheet-summary">上にスワイプしてカテゴリを選択</span>
     </div>
+  </div>
+</div>
+
+<div id="menu-overlay"></div>
+<div id="menu-drawer" role="dialog" aria-modal="true" aria-label="メニュー" aria-hidden="true">
+  <div class="menu-drawer-header">
+    <span class="menu-drawer-title">メニュー</span>
+    <button type="button" id="menu-close-btn" aria-label="メニューを閉じる">&times;</button>
+  </div>
+  <div class="menu-drawer-body">
+    <section class="menu-section">
+      <h2>このマップについて</h2>
+      <p>はなまき子育てマップは、岩手県花巻市の学校・保育園・こども園・図書館など、子育てに関わる施設をひとつの地図にまとめた情報マップです。花巻市で子育てをするご家庭が、お近くの施設を見つけやすくなることを目指して作成・運営しています。</p>
+    </section>
+    <a class="menu-link" href="https://forms.gle/AyixaH82UneZoMD59" target="_blank" rel="noopener">情報提供・修正はこちら</a>
+    <section class="menu-section">
+      <h2>ご利用にあたっての注意事項</h2>
+      <p>掲載内容は、施設の状況により変更される場合があります。ご来所・ご利用の際は、事前に各施設へ直接ご確認ください。</p>
+    </section>
   </div>
 </div>
 
@@ -3456,6 +3574,35 @@ renderFacList();
 if (!hasRestoredView && allMarkers.length > 0) {
   const group = L.featureGroup(allMarkers);
   map.fitBounds(group.getBounds().pad(0.2));
+}
+
+// ハンバーガーメニュー（三本線）：右からスライドインするドロワー
+const menuBtn = document.getElementById('menu-btn');
+const menuDrawer = document.getElementById('menu-drawer');
+const menuOverlay = document.getElementById('menu-overlay');
+const menuCloseBtn = document.getElementById('menu-close-btn');
+
+function openMenu() {
+  menuDrawer.classList.add('open');
+  menuOverlay.classList.add('open');
+  menuDrawer.setAttribute('aria-hidden', 'false');
+  menuBtn.setAttribute('aria-expanded', 'true');
+}
+function closeMenu() {
+  menuDrawer.classList.remove('open');
+  menuOverlay.classList.remove('open');
+  menuDrawer.setAttribute('aria-hidden', 'true');
+  menuBtn.setAttribute('aria-expanded', 'false');
+}
+if (menuBtn) {
+  menuBtn.addEventListener('click', () => {
+    if (menuDrawer.classList.contains('open')) closeMenu(); else openMenu();
+  });
+  menuCloseBtn.addEventListener('click', closeMenu);
+  menuOverlay.addEventListener('click', closeMenu);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menuDrawer.classList.contains('open')) closeMenu();
+  });
 }
 </script>
 </body>
